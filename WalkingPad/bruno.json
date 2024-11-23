@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "WalkingPad",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
