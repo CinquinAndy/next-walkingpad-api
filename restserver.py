@@ -197,10 +197,170 @@ async def get_history():
 
     return last_status
 
+
 @app.route("/save", methods=['POST'])
-def save():
-    store_in_db(10, 25, 35)
-    # store_in_db(last_status['steps'], last_status['distance'], last_status['time'])
+async def save():
+    """Save the last recorded session from pad's memory.
+    This is the main save method that retrieves data directly from the pad.
+    """
+    try:
+        await connect()
+
+        # Get the last record from the pad
+        await ctler.ask_hist(0)
+        await asyncio.sleep(minimal_cmd_space)
+
+        if not last_status['steps'] or not last_status['distance'] or not last_status['time']:
+            return {"error": "No data available to save"}, 400
+
+        store_in_db(
+            steps=last_status['steps'],
+            distance_in_km=last_status['distance'],
+            duration_in_seconds=last_status['time']
+        )
+
+        return {
+            "message": "Session saved successfully",
+            "data": last_status
+        }
+
+    finally:
+        await disconnect()
+
+
+@app.route("/save/test", methods=['POST'])
+def save_test():
+    """Save test data to verify database connection and storage.
+    Useful for testing database connectivity without requiring pad connection.
+    """
+    try:
+        # Use sample test data
+        test_data = {
+            'steps': 1000,
+            'distance': 0.75,  # km
+            'duration': 15 * 60  # 15 minutes in seconds
+        }
+
+        store_in_db(
+            steps=test_data['steps'],
+            distance_in_km=test_data['distance'],
+            duration_in_seconds=test_data['duration']
+        )
+
+        return {
+            "message": "Test data saved successfully",
+            "data": test_data
+        }
+
+    except Exception as e:
+        return {
+            "error": "Failed to save test data",
+            "details": str(e)
+        }, 500
+
+
+@app.route("/save/custom", methods=['POST'])
+def save_custom():
+    """Save custom exercise data provided in the request.
+    Allows manual entry of exercise data with validation.
+
+    Expected JSON body:
+    {
+        "steps": integer,
+        "distance": float (in kilometers),
+        "duration": integer (in seconds)
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return {"error": "No data provided"}, 400
+
+        # Validate required fields
+        required_fields = ['steps', 'distance', 'duration']
+        for field in required_fields:
+            if field not in data:
+                return {"error": f"Missing required field: {field}"}, 400
+
+        # Validate data types and ranges
+        try:
+            steps = int(data['steps'])
+            distance = float(data['distance'])
+            duration = int(data['duration'])
+
+            if steps < 0 or distance < 0 or duration < 0:
+                return {"error": "Values cannot be negative"}, 400
+
+            if steps > 100000:  # Reasonable maximum for steps
+                return {"error": "Step count seems unreasonably high"}, 400
+
+            if distance > 42.2:  # Marathon distance as reasonable maximum
+                return {"error": "Distance seems unreasonably high"}, 400
+
+            if duration > 24 * 3600:  # 24 hours as reasonable maximum
+                return {"error": "Duration seems unreasonably high"}, 400
+
+        except ValueError:
+            return {"error": "Invalid data types provided"}, 400
+
+        # Store the validated data
+        store_in_db(
+            steps=steps,
+            distance_in_km=distance,
+            duration_in_seconds=duration
+        )
+
+        return {
+            "message": "Custom data saved successfully",
+            "data": {
+                "steps": steps,
+                "distance": distance,
+                "duration": duration
+            }
+        }
+
+    except Exception as e:
+        return {
+            "error": "Failed to save custom data",
+            "details": str(e)
+        }, 500
+
+
+@app.route("/save/current", methods=['POST'])
+async def save_current():
+    """Save the current session data from the pad's current status.
+    Useful when you want to save mid-session data or when last_status is unavailable.
+    """
+    try:
+        await connect()
+
+        # Get current status
+        await ctler.ask_stats()
+        await asyncio.sleep(minimal_cmd_space)
+
+        if not ctler.last_status:
+            return {"error": "Could not retrieve current status"}, 400
+
+        # Convert the status data
+        current_data = {
+            'steps': ctler.last_status.steps,
+            'distance': ctler.last_status.dist / 100,  # Convert to kilometers
+            'duration': ctler.last_status.time
+        }
+
+        store_in_db(
+            steps=current_data['steps'],
+            distance_in_km=current_data['distance'],
+            duration_in_seconds=current_data['duration']
+        )
+
+        return {
+            "message": "Current session data saved successfully",
+            "data": current_data
+        }
+
+    finally:
+        await disconnect()
 
 @app.route("/startwalk", methods=['POST'])
 async def start_walk():
