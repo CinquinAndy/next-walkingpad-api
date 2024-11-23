@@ -233,6 +233,146 @@ async def finish_walk():
     return last_status
 
 
+@app.route("/speed", methods=['POST'])
+async def change_pad_speed():
+    """Change the walking pad's speed.
+
+    Query Parameters:
+    - speed: Integer value representing speed in km/h multiplied by 10 (e.g., 30 = 3.0 km/h)
+
+    Returns:
+    - JSON object with the new speed value
+    """
+    try:
+        speed = int(request.args.get('speed', 0))
+        if speed < 0 or speed > 60:  # Maximum 6 km/h
+            return "Speed must be between 0 and 60 (0-6.0 km/h)", 400
+
+        await connect()
+        await ctler.change_speed(speed)
+        await asyncio.sleep(minimal_cmd_space)
+
+        return {"speed": speed / 10}
+    finally:
+        await disconnect()
+
+
+@app.route("/stop", methods=['POST'])
+async def stop_pad():
+    """Stop the walking pad immediately.
+
+    Returns:
+    - Success message
+    """
+    try:
+        await connect()
+        await ctler.stop_belt()
+        await asyncio.sleep(minimal_cmd_space)
+        return {"message": "Walking pad stopped successfully"}
+    finally:
+        await disconnect()
+
+
+@app.route("/preferences", methods=['POST'])
+async def set_preferences():
+    """Set various walking pad preferences.
+
+    Query Parameters:
+    - max_speed: Maximum speed limit (10-60, representing 1.0-6.0 km/h)
+    - start_speed: Starting speed (10-30, representing 1.0-3.0 km/h)
+    - sensitivity: Sensitivity level (1=high, 2=medium, 3=low)
+    - child_lock: Enable/disable child lock (true/false)
+    - units_miles: Use miles instead of kilometers (true/false)
+
+    Returns:
+    - JSON object with updated preferences
+    """
+    try:
+        await connect()
+        updates = {}
+
+        if 'max_speed' in request.args:
+            speed = int(request.args.get('max_speed'))
+            if 10 <= speed <= 60:
+                await ctler.set_pref_max_speed(speed)
+                updates['max_speed'] = speed / 10
+
+        if 'start_speed' in request.args:
+            speed = int(request.args.get('start_speed'))
+            if 10 <= speed <= 30:
+                await ctler.set_pref_start_speed(speed)
+                updates['start_speed'] = speed / 10
+
+        if 'sensitivity' in request.args:
+            sensitivity = int(request.args.get('sensitivity'))
+            if sensitivity in [1, 2, 3]:
+                await ctler.set_pref_sensitivity(sensitivity)
+                updates['sensitivity'] = sensitivity
+
+        if 'child_lock' in request.args:
+            child_lock = request.args.get('child_lock').lower() == 'true'
+            await ctler.set_pref_child_lock(child_lock)
+            updates['child_lock'] = child_lock
+
+        if 'units_miles' in request.args:
+            units_miles = request.args.get('units_miles').lower() == 'true'
+            await ctler.set_pref_units_miles(units_miles)
+            updates['units_miles'] = units_miles
+
+        await asyncio.sleep(minimal_cmd_space)
+        return updates
+
+    finally:
+        await disconnect()
+
+
+@app.route("/target", methods=['POST'])
+async def set_target():
+    """Set a target for the walking session.
+
+    Query Parameters:
+    - type: Target type (0=none, 1=distance, 2=calories, 3=time)
+    - value: Target value (distance in meters, calories in kcal, time in minutes)
+
+    Returns:
+    - JSON object with the set target
+    """
+    try:
+        target_type = int(request.args.get('type', 0))
+        target_value = int(request.args.get('value', 0))
+
+        if target_type not in [WalkingPad.TARGET_NONE, WalkingPad.TARGET_DIST,
+                               WalkingPad.TARGET_CAL, WalkingPad.TARGET_TIME]:
+            return "Invalid target type", 400
+
+        await connect()
+        await ctler.set_pref_target(target_type, target_value)
+        await asyncio.sleep(minimal_cmd_space)
+
+        return {
+            "target_type": target_type,
+            "target_value": target_value
+        }
+    finally:
+        await disconnect()
+
+
+@app.route("/calibrate", methods=['POST'])
+async def calibrate_pad():
+    """Calibrate the walking pad. This should be done while the pad is stopped.
+
+    Returns:
+    - Success message
+    """
+    try:
+        await connect()
+        # Send calibration command (0x07)
+        await ctler.cmd_162_3_7()
+        await asyncio.sleep(minimal_cmd_space)
+        return {"message": "Calibration initiated"}
+    finally:
+        await disconnect()
+
 ctler.handler_last_status = on_new_status
 
 if __name__ == '__main__':
