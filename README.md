@@ -46,10 +46,6 @@ Execute a `POST` request to *http://<ServerIP>:5678/mode?new_mode=manual* - this
 If the status is changing on your WalkingPad you're good to go.
 
 ## REST API Endpoints
-# WalkingPad REST API
-
-This application connects to the KingSmith WalkingPad via the [ph4-walkingpad controller](https://github.com/ph4r05/ph4-walkingpad). It was tested with the WalkingPad A1 but might work with other versions too.
-
 ## Available Endpoints
 
 ### Basic Controls
@@ -125,10 +121,95 @@ The API will return appropriate HTTP status codes:
 - 400: Invalid parameters
 - 500: Server/device error
 
-----
-Todo : 
-- [ ] add endpoints
-  - [ ] change speed
-  - [ ] stop the pad
-- [ ] fix the code
-- [ ] add cleaner readme
+## Save Endpoints Documentation
+
+The API provides several ways to save exercise data to the database:
+
+### 1. Standard Save
+```http
+POST /save
+```
+Retrieves and saves the last completed session from the pad's memory.
+- No request body needed
+- Gets data directly from the pad's last_status
+- Best used after completing a session
+
+### 2. Test Save
+```http
+POST /save/test
+```
+Saves predefined test data to verify database connectivity.
+- No request body needed
+- Uses sample data (1000 steps, 0.75 km, 15 minutes)
+- Useful for testing database setup
+
+### 3. Custom Save
+```http
+POST /save/custom
+Content-Type: application/json
+
+{
+    "steps": 5000,
+    "distance": 3.5,
+    "duration": 1800
+}
+```
+Saves custom exercise data provided in the request.
+- Requires JSON body with exercise data
+- Validates data ranges and types
+- Useful for manual data entry
+
+Parameters:
+- `steps`: Integer number of steps
+- `distance`: Float distance in kilometers
+- `duration`: Integer duration in seconds
+
+### 4. Current Save
+```http
+POST /save/current
+```
+Saves the current session data from the pad's real-time status.
+- No request body needed
+- Gets data from current pad status
+- Useful for saving mid-session data
+
+### Example Usage
+
+Save test data:
+```bash
+curl -X POST http://localhost:5678/save/test
+```
+
+Save custom exercise data:
+```bash
+curl -X POST http://localhost:5678/save/custom \
+  -H "Content-Type: application/json" \
+  -d '{"steps": 5000, "distance": 3.5, "duration": 1800}'
+```
+
+### Error Handling
+
+All save endpoints return:
+- 200: Success with saved data
+- 400: Invalid data or validation error
+- 500: Database or server error
+
+Response format on success:
+```json
+{
+    "message": "Session saved successfully",
+    "data": {
+        "steps": 5000,
+        "distance": 3.5,
+        "duration": 1800
+    }
+}
+```
+
+Response format on error:
+```json
+{
+    "error": "Error message",
+    "details": "Optional error details"
+}
+```
