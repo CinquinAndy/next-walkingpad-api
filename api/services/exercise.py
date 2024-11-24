@@ -25,6 +25,7 @@ class ExerciseService:
         self.db = DatabaseService()
         self.device = device_service
         self.current_session: Optional[ExerciseSession] = None
+        self.db.initialize_db()
 
     async def start_session(self) -> ExerciseSession:
         """Start a new exercise session"""
@@ -32,29 +33,36 @@ class ExerciseService:
             # Start device
             await self.device.start_walking()
 
-            # Create session record
+            # Create initial session object
             session = ExerciseSession(
                 user_id=1,  # TODO: Get from auth
                 start_time=datetime.now(timezone.utc),
-                mode='manual',
-                steps=0,
-                distance_km=0,
-                duration_seconds=0,
-                calories=0
+                mode='manual'
             )
 
+            # Insert into database
             query = """
                 INSERT INTO exercise_sessions 
-                (user_id, start_time, mode)
-                VALUES (%s, %s, %s)
+                (user_id, start_time, mode, steps, distance_km, duration_seconds, calories, average_speed)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING *
             """
             result = self.db.execute_query(
                 query,
-                (session.user_id, session.start_time, session.mode)
+                (
+                    session.user_id,
+                    session.start_time,
+                    session.mode,
+                    session.steps,
+                    session.distance_km,
+                    session.duration_seconds,
+                    session.calories,
+                    session.average_speed
+                )
             )
 
-            self.current_session = ExerciseSession(**result[0])
+            # Create session from database result
+            self.current_session = ExerciseSession.from_db_row(result[0])
             logger.info(f"Started new session: {self.current_session.id}")
 
             return self.current_session

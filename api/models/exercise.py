@@ -17,29 +17,43 @@ class SessionData:
     def is_valid(self) -> bool:
         """Validate session data"""
         return (
-            self.steps >= 0 and
-            self.steps <= 100000 and
-            self.distance >= 0 and
-            self.distance <= 42.2 and
-            self.duration >= 0 and
-            self.duration <= 24 * 3600
+                0 <= self.steps <= 100000 and
+                0 <= self.distance <= 42.2 and
+                0 <= self.duration <= 24 * 3600
         )
 
 @dataclass
 class ExerciseSession:
     """Exercise session model"""
-    id: Optional[int]
     user_id: int
     start_time: datetime
-    end_time: Optional[datetime]
-    duration_seconds: int
-    distance_km: float
-    steps: int
-    calories: Optional[int]
-    average_speed: Optional[float]
     mode: str
-    created_at: datetime
-    
+    steps: int = 0
+    distance_km: float = 0
+    duration_seconds: int = 0
+    calories: int = 0
+    id: Optional[int] = None
+    end_time: Optional[datetime] = None
+    average_speed: Optional[float] = 0
+    created_at: Optional[datetime] = None
+
+    @classmethod
+    def from_db_row(cls, row: dict):
+        """Create instance from database row"""
+        return cls(
+            id=row.get('id'),
+            user_id=row.get('user_id'),
+            start_time=row.get('start_time'),
+            end_time=row.get('end_time'),
+            mode=row.get('mode'),
+            steps=row.get('steps', 0),
+            distance_km=row.get('distance_km', 0),
+            duration_seconds=row.get('duration_seconds', 0),
+            calories=row.get('calories', 0),
+            average_speed=row.get('average_speed', 0),
+            created_at=row.get('created_at')
+        )
+
     def to_dict(self) -> dict:
         """Convert session to dictionary"""
         return {

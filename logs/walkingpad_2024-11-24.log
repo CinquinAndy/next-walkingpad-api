@@ -144,3 +144,72 @@
 2024-11-24 18:28:48,013 - walkingpad - [INFO] - device:88 - Setting speed to: 25
 2024-11-24 18:28:48,013 - walkingpad - [INFO] - device:151 - [try to connect]
 2024-11-24 18:28:50,865 - walkingpad - [INFO] - device:94 - Speed set successfully to 25
+2024-11-24 18:31:36,312 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:31:36,312 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:31:39,496 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:31:43,413 - walkingpad - [ERROR] - exercise:63 - Failed to start session: ExerciseSession.__init__() missing 4 required positional arguments: 'id', 'end_time', 'average_speed', and 'created_at'
+2024-11-24 18:32:02,041 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:32:02,041 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:32:04,936 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:32:08,837 - walkingpad - [ERROR] - exercise:63 - Failed to start session: ExerciseSession.__init__() missing 4 required positional arguments: 'id', 'end_time', 'average_speed', and 'created_at'
+2024-11-24 18:34:20,095 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:34:20,101 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:34:20,101 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:34:29,692 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:34:29,697 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:34:29,698 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:34:41,460 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:34:41,466 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:34:41,466 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:34:49,049 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:34:49,054 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:34:49,054 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:35:21,400 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:35:21,407 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:35:21,407 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:35:50,443 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:35:50,443 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:35:53,597 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:35:57,765 - walkingpad - [ERROR] - exercise:70 - Failed to start session: insert or update on table "exercise_sessions" violates foreign key constraint "exercise_sessions_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+
+2024-11-24 18:36:20,229 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:36:20,231 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:36:20,231 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:36:23,450 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:37:55,520 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:37:55,528 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:37:55,528 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:38:01,086 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:38:01,091 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:38:01,092 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:38:24,314 - walkingpad - [ERROR] - database:25 - Failed to initialize database: column "username" of relation "users" does not exist
+LINE 2:                 INSERT INTO users (id, username, weight_kg, ...
+                                               ^
+
+2024-11-24 18:40:33,018 - walkingpad - [ERROR] - database:27 - Failed to initialize database: no results to fetch
+2024-11-24 18:41:17,031 - walkingpad - [ERROR] - database:27 - Failed to initialize database: no results to fetch
+2024-11-24 18:43:41,391 - walkingpad - [ERROR] - database:58 - Failed to initialize database: no results to fetch
+2024-11-24 18:43:54,386 - walkingpad - [ERROR] - database:57 - Failed to initialize database: no results to fetch
+2024-11-24 18:45:19,855 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:20,014 - walkingpad - [INFO] - database:62 - Database initialized with default user
+2024-11-24 18:45:20,193 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:20,361 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:20,365 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:45:20,371 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:45:20,372 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:45:21,732 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:21,891 - walkingpad - [INFO] - database:62 - Database initialized with default user
+2024-11-24 18:45:22,058 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:22,226 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:45:22,229 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:45:22,235 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:45:22,236 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:45:38,593 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:45:38,594 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:45:41,396 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:45:45,359 - walkingpad - [ERROR] - exercise:71 - Failed to start session: list index out of range
+2024-11-24 18:45:57,608 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:45:57,609 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:46:00,775 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:46:04,762 - walkingpad - [ERROR] - exercise:71 - Failed to start session: list index out of range
