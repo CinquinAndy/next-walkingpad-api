@@ -1,2 +1,6 @@
 2024-11-24 17:07:47,946 - walkingpad - INFO - Application initialized successfully
 2024-11-24 17:07:47,947 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=False)
+2024-11-24 17:29:22,381 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:29:22,382 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:29:23,588 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:29:23,589 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
