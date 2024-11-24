@@ -1,55 +1,49 @@
 """
-Targets service for managing exercise targets and goals
+Targets service handling
 """
-from datetime import datetime, date
+from datetime import date
 from typing import List, Optional
 from api.services.database import DatabaseService
-from api.services.exercise import exercise_service
+from api.utils.helpers import parse_date
+from api.utils.logger import get_logger
 from api.models.target import Target, TargetProgress
 
 
-class TargetsService:
-    """Service for managing exercise targets"""
+logger = get_logger()
 
+class TargetsService:
     def __init__(self):
         """Initialize targets service"""
         self.db = DatabaseService()
 
-    async def get_targets(self, active_only: bool = True) -> List[Target]:
-        """Get all targets"""
-        query = """
-            SELECT * FROM exercise_targets 
-            WHERE user_id = (SELECT id FROM users LIMIT 1)
-        """
+    async def get_targets(self, user_id: Optional[int] = None, active_only: bool = True) -> List[Target]:
+        """Get all targets for a user"""
+        try:
+            query = """
+                SELECT * FROM exercise_targets
+                WHERE 1=1
+            """
+            params = []
 
-        if active_only:
-            query += " AND (end_date IS NULL OR end_date >= CURRENT_DATE)"
+            if user_id:
+                query += " AND user_id = %s"
+                params.append(user_id)
+            else:
+                query += " AND user_id = (SELECT id FROM users LIMIT 1)"
 
-        query += " ORDER BY start_date DESC"
+            if active_only:
+                query += " AND (end_date IS NULL OR end_date >= CURRENT_DATE)"
 
-        results = self.db.execute_query(query)
-        return [Target(**row) for row in results]
+            query += " ORDER BY start_date DESC"
 
-    async def create_target(self, target: Target) -> Target:
-        """Create a new target"""
-        query = """
-            INSERT INTO exercise_targets 
-                (user_id, type, value, start_date, end_date)
-            VALUES (
-                (SELECT id FROM users LIMIT 1),
-                %s, %s, %s, %s
-            )
-            RETURNING *
-        """
-        params = (
-            target.type,
-            target.value,
-            target.start_date or date.today(),
-            target.end_date
-        )
+            logger.debug(f"Executing get_targets query: {query}")
+            logger.debug(f"With parameters: {params}")
 
-        result = self.db.execute_query(query, params)
-        return Target(**result[0])
+            results = self.db.execute_query(query, params if params else None)
+            return [Target.from_db_row(row) for row in results]
+        except Exception as e:
+            logger.error(f"Failed to get targets: {e}")
+            raise
 
     async def update_target(self, target_id: int, data: dict) -> Target:
         """Update an existing target"""
@@ -83,58 +77,68 @@ class TargetsService:
             WHERE id = %s 
             AND user_id = (SELECT id FROM users LIMIT 1)
         """
-        self.db.execute_query(query, (target_id,), fetch=False)
+        self.db.execute_query(query, (target_id,))
 
-    async def get_target_progress(
-            self,
-            target_id: int
-    ) -> Optional[TargetProgress]:
+    async def get_target_progress(self, target_id: int) -> Optional[TargetProgress]:
         """Get progress for a specific target"""
-        # First get the target
-        query = """
-            SELECT * FROM exercise_targets 
-            WHERE id = %s AND user_id = (SELECT id FROM users LIMIT 1)
-        """
-        result = self.db.execute_query(query, (target_id,))
+        try:
+            # First get the target
+            query = """
+                SELECT * FROM exercise_targets 
+                WHERE id = %s AND user_id = (SELECT id FROM users LIMIT 1)
+            """
+            result = self.db.execute_query(query, (target_id,))
 
-        if not result:
-            return None
+            if not result:
+                logger.warning(f"No target found with id {target_id}")
+                return None
 
-        target = Target(**result[0])
+            target = Target.from_db_row(result[0])
+            logger.debug(f"Found target: {target.to_dict()}")
 
-        # Then get the progress
-        start_date = target.start_date or date.today()
-        end_date = target.end_date or date.today()
+            # Calculate date range
+            start_date = target.start_date
+            end_date = target.end_date or date.today()
 
-        # Calculate progress based on target type
-        query = """
-            SELECT 
-                COALESCE(SUM(duration_seconds), 0) as total_duration,
-                COALESCE(SUM(distance_km), 0) as total_distance,
-                COALESCE(SUM(steps), 0) as total_steps,
-                COALESCE(SUM(calories), 0) as total_calories
-            FROM exercise_sessions
-            WHERE user_id = (SELECT id FROM users LIMIT 1)
-            AND DATE(start_time) BETWEEN %s AND %s
-        """
-        stats = self.db.execute_query(query, (start_date, end_date))[0]
+            # Get exercise stats
+            stats_query = """
+                SELECT 
+                    COALESCE(SUM(duration_seconds), 0) as total_duration,
+                    COALESCE(SUM(distance_km), 0) as total_distance,
+                    COALESCE(SUM(steps), 0) as total_steps,
+                    COALESCE(SUM(calories), 0) as total_calories,
+                    MAX(updated_at) as last_updated
+                FROM exercise_sessions
+                WHERE user_id = (SELECT id FROM users LIMIT 1)
+                AND DATE(start_time) BETWEEN %s AND %s
+                AND end_time IS NOT NULL
+            """
+            stats = self.db.execute_query(stats_query, (start_date, end_date))[0]
+            logger.debug(f"Exercise stats: {stats}")
 
-        # Get the current value based on target type
-        current_value = {
-            'duration': stats['total_duration'] / 60,  # Convert to minutes
-            'distance': stats['total_distance'],
-            'steps': stats['total_steps'],
-            'calories': stats['total_calories']
-        }[target.type]
+            # Map target type to corresponding stat
+            type_to_stat = {
+                'duration': stats['total_duration'] / 60,  # Convert to minutes
+                'distance': stats['total_distance'],
+                'steps': stats['total_steps'],
+                'calories': stats['total_calories']
+            }
 
-        progress = (current_value / target.value) * 100 if target.value else 0
+            current_value = type_to_stat.get(target.type, 0)
+            progress = min(100, (current_value / target.value * 100) if target.value > 0 else 0)
+            completed = progress >= 100
 
-        return TargetProgress(
-            target=target,
-            current_value=current_value,
-            progress=min(100, progress),
-            completed=progress >= 100
-        )
+            return TargetProgress(
+                target=target,
+                current_value=current_value,
+                progress=progress,
+                completed=completed,
+                last_updated=stats['last_updated']
+            )
+
+        except Exception as e:
+            logger.error(f"Error getting target progress: {e}", exc_info=True)
+            raise
 
     async def get_all_targets_progress(self) -> List[TargetProgress]:
         """Get progress for all active targets"""
@@ -147,6 +151,44 @@ class TargetsService:
                 progress.append(target_progress)
 
         return progress
+
+    async def create_target(self, target_data: dict) -> Target:
+        """Create a new target"""
+        try:
+            logger.debug(f"Creating new target with data: {target_data}")
+
+            # Parse dates
+            start_date = parse_date(target_data.get('start_date')) or date.today()
+            end_date = parse_date(target_data.get('end_date'))
+
+            query = """
+                   INSERT INTO exercise_targets 
+                   (user_id, type, value, start_date, end_date, completed, created_at)
+                   VALUES (
+                       (SELECT id FROM users LIMIT 1),
+                       %s, %s, %s, %s, %s, NOW()
+                   )
+                   RETURNING *
+               """
+            params = (
+                target_data['type'],
+                float(target_data['value']),
+                start_date,
+                end_date,
+                False  # initial completed status
+            )
+
+            logger.debug(f"Executing insert with params: {params}")
+            result = self.db.execute_query(query, params)
+
+            if not result:
+                raise Exception("Failed to create target")
+
+            return Target.from_db_row(result[0])
+
+        except Exception as e:
+            logger.error(f"Failed to create target: {e}")
+            raise
 
 
 # Create singleton instance

@@ -1,0 +1,15 @@
+meta {
+  name: GET Stats
+  type: http
+  seq: 4
+}
+
+get {
+  url: 127.0.0.1:5678/api/exercise/stats?period=monthly
+  body: none
+  auth: none
+}
+
+params:query {
+  period: monthly
+}

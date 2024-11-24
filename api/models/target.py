@@ -3,7 +3,27 @@ Target and goal related models
 """
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Dict, Any
+from enum import Enum
+
+class TargetType(str, Enum):
+    """Target types enum"""
+    DISTANCE = 'distance'    # Distance in kilometers
+    STEPS = 'steps'         # Number of steps
+    CALORIES = 'calories'   # Calories burned
+    DURATION = 'duration'   # Duration in minutes
+
+    @classmethod
+    def values(cls) -> list[str]:
+        """Get all valid target types"""
+        return [member.value for member in cls]
+
+"""
+Target and goal related models
+"""
+from dataclasses import dataclass
+from datetime import date, datetime
+from typing import Optional, Dict, Any
 from enum import Enum
 
 class TargetType(str, Enum):
@@ -21,14 +41,41 @@ class TargetType(str, Enum):
 @dataclass
 class Target:
     """Exercise target model"""
-    id: Optional[int] = None
-    type: str = TargetType.STEPS.value
-    value: float = 0.0
-    start_date: Optional[date] = None
+    id: int
+    user_id: int
+    type: str
+    value: float
+    start_date: date
+    created_at: datetime
     end_date: Optional[date] = None
     completed: bool = False
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+
+    @classmethod
+    def from_db_row(cls, row: Dict[str, Any]) -> 'Target':
+        """Create a Target instance from a database row"""
+        return cls(
+            id=row['id'],
+            user_id=row['user_id'],
+            type=row['type'],
+            value=float(row['value']),
+            start_date=row['start_date'],
+            end_date=row.get('end_date'),
+            completed=row.get('completed', False),
+            created_at=row['created_at']
+        )
+
+    def to_dict(self) -> dict:
+        """Convert target to dictionary"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'type': self.type,
+            'value': round(self.value, 2),
+            'start_date': self.start_date.isoformat() if self.start_date else None,
+            'end_date': self.end_date.isoformat() if self.end_date else None,
+            'completed': self.completed,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
     def is_valid(self) -> bool:
         """Validate target"""
@@ -46,17 +93,6 @@ class Target:
             return 0 < self.value <= 24 * 60  # 24 hours in minutes
 
         return False
-
-    def to_dict(self) -> dict:
-        """Convert target to dictionary"""
-        return {
-            'id': self.id,
-            'type': self.type,
-            'value': self.value,
-            'start_date': self.start_date.isoformat() if self.start_date else None,
-            'end_date': self.end_date.isoformat() if self.end_date else None,
-            'completed': self.completed
-        }
 
 @dataclass
 class TargetProgress:

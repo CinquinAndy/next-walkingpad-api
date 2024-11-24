@@ -1,0 +1,15 @@
+meta {
+  name: GET Targets
+  type: http
+  seq: 2
+}
+
+get {
+  url: 127.0.0.1:5678/api/targets?user_id=1
+  body: none
+  auth: none
+}
+
+params:query {
+  user_id: 1
+}

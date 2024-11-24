@@ -1,0 +1,21 @@
+meta {
+  name: POST Targets
+  type: http
+  seq: 1
+}
+
+post {
+  url: 127.0.0.1:5678/api/targets/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": 1,
+    "type": "distance",
+    "value": 5.0,
+    "start_date": "2024-10-01",
+    "end_date": "2024-12-31"
+  }
+}
