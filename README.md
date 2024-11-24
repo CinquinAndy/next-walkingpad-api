@@ -227,3 +227,15 @@ Logs are stored in `logs/` directory with daily rotation.
 
 - [ph4-walkingpad](https://github.com/ph4r05/ph4-walkingpad) for the base controller
 - [KingSmith](https://www.kingsmith.com/) for the WalkingPad device
+
+
+----
+# Todo
+- [ ] Check up all the reamining endpoints
+  - [ ] /exercise/stats
+  - [ ] /targets/
+  - [ ] POST /targets/
+  - [ ] GET /targets/progress
+  - [ ] GET /preferences
+  - [ ] POST /preferences
+- Add a check on the device if an exercise was not saved, before start a new one (start session)
