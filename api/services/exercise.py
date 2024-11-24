@@ -25,6 +25,8 @@ class ExerciseService:
         """Initialize exercise service"""
         self.db = DatabaseService()
         self.device = device_service
+        from api.services.security import ExerciseSecurityService  # New import
+        self.security = ExerciseSecurityService(self.db, self.device)  # New security service
         self.current_session: Optional[ExerciseSession] = None
         self.db.initialize_db()
         self._last_device_metrics: Dict = {}
@@ -60,7 +62,11 @@ class ExerciseService:
     async def start_session(self) -> ExerciseSession:
         """Start a new exercise session"""
         try:
-            # Start device
+            # New security check
+            is_safe, error_message = await self.security.check_session_safety()
+            if not is_safe:
+                raise ValueError(error_message)
+
             await self.device.start_walking()
 
             current_time = datetime.now(timezone.utc)
