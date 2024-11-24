@@ -1,11 +1,12 @@
+import asyncio
+from datetime import date
+
+import psycopg2
+import yaml
 from flask import Flask, request
 from ph4_walkingpad import pad
 from ph4_walkingpad.pad import WalkingPad, Controller
 from ph4_walkingpad.utils import setup_logging
-import asyncio
-import yaml
-import psycopg2
-from datetime import date
 
 app = Flask(__name__)
 
@@ -25,7 +26,6 @@ last_status = {
 
 
 def on_new_status(sender, record):
-
     distance_in_km = record.dist / 100
     print("Received Record:")
     print('Distance: {0}km'.format(distance_in_km))
@@ -124,6 +124,7 @@ async def get_pad_mode():
 
     return "Error", 500
 
+
 @app.route("/mode", methods=['POST'])
 async def change_pad_mode():
     new_mode = request.args.get('new_mode')
@@ -147,6 +148,7 @@ async def change_pad_mode():
         await disconnect()
 
     return new_mode
+
 
 @app.route("/status", methods=['GET'])
 async def get_status():
@@ -172,7 +174,7 @@ async def get_status():
             belt_state = "idle"
         elif (belt_state == 1):
             belt_state = "running"
-        elif (belt_state >=7):
+        elif (belt_state >= 7):
             belt_state = "starting"
 
         dist = stats.dist / 100
@@ -180,7 +182,7 @@ async def get_status():
         steps = stats.steps
         speed = stats.speed / 10
 
-        return { "dist": dist, "time": time, "steps": steps, "speed": speed, "belt_state": belt_state }
+        return {"dist": dist, "time": time, "steps": steps, "speed": speed, "belt_state": belt_state}
     finally:
         await disconnect()
 
@@ -362,11 +364,12 @@ async def save_current():
     finally:
         await disconnect()
 
+
 @app.route("/startwalk", methods=['POST'])
 async def start_walk():
     try:
         await connect()
-        await ctler.switch_mode(WalkingPad.MODE_STANDBY) # Ensure we start from a known state, since start_belt is actually toggle_belt
+        await ctler.switch_mode(WalkingPad.MODE_STANDBY)  # Ensure we start from a known state, since start_belt is actually toggle_belt
         await asyncio.sleep(minimal_cmd_space)
         await ctler.switch_mode(WalkingPad.MODE_MANUAL)
         await asyncio.sleep(minimal_cmd_space)
@@ -377,6 +380,7 @@ async def start_walk():
     finally:
         await disconnect()
     return last_status
+
 
 @app.route("/finishwalk", methods=['POST'])
 async def finish_walk():
@@ -532,6 +536,7 @@ async def calibrate_pad():
         return {"message": "Calibration initiated"}
     finally:
         await disconnect()
+
 
 ctler.handler_last_status = on_new_status
 

@@ -3099,3 +3099,139 @@ TypeError: DeviceSettings.__init__() got an unexpected keyword argument 'id'
             
 2024-11-24 23:48:20,613 - walkingpad - [DEBUG] - database:30 - With parameters: ('month',)
 2024-11-24 23:48:20,678 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('total_sessions', 8), ('total_distance', 0.41), ('total_steps', 1021), ('total_duration', 654), ('total_calories', 32), ('average_speed', 0.5693181818181818)])]
+2024-11-24 23:55:31,121 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:31,299 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:55:31,299 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:55:31,570 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:55:31,571 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:55:31,633 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:55:31,665 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:55:31,846 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:32,021 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:32,195 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:32,198 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:55:32,204 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:55:32,205 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:55:41,220 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:41,388 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:55:41,389 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:55:41,651 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:55:41,653 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:55:41,717 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:55:41,761 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:55:41,936 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:42,116 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:42,292 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:42,296 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:55:42,302 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:55:42,302 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:55:58,318 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:58,517 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:55:58,517 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:55:58,831 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:55:58,831 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:55:58,897 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:55:58,930 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:55:59,139 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:59,329 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:59,494 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:55:59,497 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:55:59,503 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:55:59,504 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:56:01,178 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:01,348 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:56:01,348 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:56:01,621 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:56:01,622 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:56:01,684 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:56:01,715 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:56:01,891 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:02,070 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:02,256 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:02,259 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:56:02,266 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:56:02,266 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:56:32,563 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:32,729 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:56:32,729 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:56:33,006 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:56:33,007 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:56:33,070 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:56:33,103 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:56:33,281 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:33,466 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:33,638 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:33,641 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:56:33,648 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:56:33,648 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:56:46,557 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:46,724 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:56:46,724 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:56:46,989 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:56:46,989 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:56:47,053 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:56:47,088 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:56:47,260 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:47,429 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:47,622 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:47,624 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:56:47,630 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:56:47,631 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:56:50,359 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:50,595 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:56:50,596 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:56:50,872 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:56:50,872 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:56:50,939 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:56:50,973 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:56:51,140 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:51,324 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:51,509 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:56:51,511 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:56:51,518 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:56:51,518 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:57:09,791 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:57:09,975 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:57:09,976 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:57:10,240 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:57:10,240 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:57:10,304 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:57:10,335 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:57:10,504 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:57:10,675 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:57:10,847 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:57:10,851 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:57:10,856 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:57:10,857 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)

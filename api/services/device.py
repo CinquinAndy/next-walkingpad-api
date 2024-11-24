@@ -2,9 +2,11 @@
 WalkingPad device service
 """
 import asyncio
+
 from ph4_walkingpad import pad
 from ph4_walkingpad.pad import WalkingPad, Controller
 from ph4_walkingpad.utils import setup_logging
+
 from api.config.config import Config
 from api.utils.logger import logger
 

@@ -3,7 +3,7 @@ Targets controller
 """
 from flask import Blueprint, request, jsonify
 
-from api.models.target import TargetType, Target
+from api.models.target import TargetType
 from api.services.targets import TargetsService
 from api.utils.logger import get_logger
 

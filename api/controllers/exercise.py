@@ -2,9 +2,9 @@
 Exercise controller handling exercise sessions and data
 """
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+
+from api.models.exercise import SessionData
 from api.services.exercise import exercise_service
-from api.models.exercise import ExerciseSession, SessionData
 from api.utils.logger import logger
 
 bp = Blueprint('exercise', __name__)

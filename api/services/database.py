@@ -1,10 +1,10 @@
 """
 Database service for managing connections and queries
 """
-from typing import List, Dict
 
 import psycopg2
-from psycopg2.extras import RealDictCursor, DictCursor
+from psycopg2.extras import RealDictCursor
+
 from api.config.config import Config
 from api.utils.logger import logger
 

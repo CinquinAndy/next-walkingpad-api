@@ -3,28 +3,9 @@ Target and goal related models
 """
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Optional, Dict, Any
 from enum import Enum
-
-class TargetType(str, Enum):
-    """Target types enum"""
-    DISTANCE = 'distance'    # Distance in kilometers
-    STEPS = 'steps'         # Number of steps
-    CALORIES = 'calories'   # Calories burned
-    DURATION = 'duration'   # Duration in minutes
-
-    @classmethod
-    def values(cls) -> list[str]:
-        """Get all valid target types"""
-        return [member.value for member in cls]
-
-"""
-Target and goal related models
-"""
-from dataclasses import dataclass
-from datetime import date, datetime
 from typing import Optional, Dict, Any
-from enum import Enum
+
 
 class TargetType(str, Enum):
     """Target types enum"""

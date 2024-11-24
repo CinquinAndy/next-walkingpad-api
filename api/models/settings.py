@@ -1,9 +1,10 @@
 """
 Settings related models
 """
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional, Dict, Any
+
 from api.utils.logger import get_logger
 
 logger = get_logger()
