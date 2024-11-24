@@ -231,11 +231,4 @@ Logs are stored in `logs/` directory with daily rotation.
 
 ----
 # Todo
-- [ ] Check up all the reamining endpoints
-  - [ ] /exercise/stats
-  - [ ] /targets/
-  - [ ] POST /targets/
-  - [ ] GET /targets/progress
-  - [ ] GET /preferences
-  - [ ] POST /preferences
 - Add a check on the device if an exercise was not saved, before start a new one (start session)

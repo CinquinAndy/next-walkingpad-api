@@ -3073,3 +3073,29 @@ TypeError: DeviceSettings.__init__() got an unexpected keyword argument 'id'
             
 2024-11-24 23:47:34,942 - walkingpad - [DEBUG] - database:30 - With parameters: (6.0, 2.5, 2, False, False)
 2024-11-24 23:47:35,007 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1), ('user_id', 1), ('max_speed', 6.0), ('start_speed', 2.5), ('sensitivity', 2), ('child_lock', False), ('units_miles', False), ('created_at', datetime.datetime(2024, 11, 24, 22, 44, 0, 661689, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 22, 47, 34, 959635, tzinfo=datetime.timezone.utc))])]
+2024-11-24 23:47:58,755 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                SELECT 
+                    COUNT(*) AS total_sessions,
+                    COALESCE(SUM(distance_km), 0) AS total_distance,
+                    COALESCE(SUM(steps), 0) AS total_steps,
+                    COALESCE(SUM(duration_seconds), 0) AS total_duration,
+                    COALESCE(SUM(calories), 0) AS total_calories,
+                    COALESCE(AVG(average_speed), 0) AS average_speed
+                FROM exercise_sessions
+                WHERE start_time >= DATE_TRUNC(%s, CURRENT_DATE)
+            
+2024-11-24 23:47:58,757 - walkingpad - [DEBUG] - database:30 - With parameters: ('month',)
+2024-11-24 23:47:58,822 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('total_sessions', 8), ('total_distance', 0.41), ('total_steps', 1021), ('total_duration', 654), ('total_calories', 32), ('average_speed', 0.5693181818181818)])]
+2024-11-24 23:48:20,612 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                SELECT 
+                    COUNT(*) AS total_sessions,
+                    COALESCE(SUM(distance_km), 0) AS total_distance,
+                    COALESCE(SUM(steps), 0) AS total_steps,
+                    COALESCE(SUM(duration_seconds), 0) AS total_duration,
+                    COALESCE(SUM(calories), 0) AS total_calories,
+                    COALESCE(AVG(average_speed), 0) AS average_speed
+                FROM exercise_sessions
+                WHERE start_time >= DATE_TRUNC(%s, CURRENT_DATE)
+            
+2024-11-24 23:48:20,613 - walkingpad - [DEBUG] - database:30 - With parameters: ('month',)
+2024-11-24 23:48:20,678 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('total_sessions', 8), ('total_distance', 0.41), ('total_steps', 1021), ('total_duration', 654), ('total_calories', 32), ('average_speed', 0.5693181818181818)])]
