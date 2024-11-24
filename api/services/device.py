@@ -179,6 +179,64 @@ class DeviceService:
         finally:
             await self.disconnect()
 
+    async def update_preferences(self, max_speed: int, start_speed: int,
+                                 sensitivity: int, child_lock: bool,
+                                 units_miles: bool) -> dict:
+        """Update device preferences"""
+        try:
+            logger.info(f"Updating device preferences: max_speed={max_speed}, "
+                        f"start_speed={start_speed}, sensitivity={sensitivity}, "
+                        f"child_lock={child_lock}, units_miles={units_miles}")
+
+            await self.connect()
+
+            # Convert speed values to device format (multiply by 10)
+            device_max_speed = max_speed * 10
+            device_start_speed = start_speed * 10
+
+            # Set maximum speed using the correct method
+            await self.controller.set_pref_max_speed(device_max_speed)
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Set starting speed
+            await self.controller.set_pref_start_speed(device_start_speed)
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Set sensitivity (1=high, 2=medium, 3=low)
+            await self.controller.set_pref_sensitivity(sensitivity)
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Set child lock
+            await self.controller.set_pref_child_lock(child_lock)
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Set units
+            await self.controller.set_pref_units_miles(units_miles)
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Verify changes by getting current status
+            await self.get_status()
+
+            logger.info("Device preferences updated successfully")
+
+            return {
+                'success': True,
+                'message': 'Preferences updated successfully',
+                'data': {
+                    'max_speed': max_speed,
+                    'start_speed': start_speed,
+                    'sensitivity': sensitivity,
+                    'child_lock': child_lock,
+                    'units_miles': units_miles
+                }
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to update device preferences: {e}", exc_info=True)
+            raise
+        finally:
+            await self.disconnect()
+
     @staticmethod
     def _get_mode_string(mode):
         """Convert mode value to string"""

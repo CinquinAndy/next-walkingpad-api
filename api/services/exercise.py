@@ -3,20 +3,20 @@ Exercise service handling session management and statistics
 """
 import asyncio
 from datetime import datetime, timezone
-from typing import Optional, List, Dict
-from api.services.database import DatabaseService
-from api.services.device import device_service
+from typing import Optional, Dict
+
 from api.models.exercise import (
     ExerciseSession,
-    SessionData,
     ExerciseHistory,
     ExerciseStats
 )
-from api.utils.logger import get_logger
+from api.services.database import DatabaseService
+from api.services.device import device_service
 from api.utils.helpers import calculate_calories
-import time
+from api.utils.logger import get_logger
 
 logger = get_logger()
+
 
 class ExerciseService:
     """Service for managing exercise sessions"""
@@ -296,7 +296,7 @@ class ExerciseService:
                     COALESCE(SUM(calories), 0) AS total_calories,
                     COALESCE(AVG(average_speed), 0) AS average_speed
                 FROM exercise_sessions
-                WHERE start_time >= date_trunc(%s, CURRENT_DATE)
+                WHERE start_time >= DATE_TRUNC(%s, CURRENT_DATE)
             """
 
             result = self.db.execute_query(query, (date_trunc,))[0]

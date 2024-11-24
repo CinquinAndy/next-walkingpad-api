@@ -5,7 +5,11 @@ meta {
 }
 
 post {
-  url: http://127.0.0.1:5678/api/device/start
+  url: http://127.0.0.1:5678/api/device/speed?speed=25
   body: none
   auth: none
+}
+
+params:query {
+  speed: 25
 }

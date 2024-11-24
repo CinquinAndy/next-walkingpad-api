@@ -1,0 +1,19 @@
+meta {
+  name: POST Preferences
+  type: http
+  seq: 2
+}
+
+post {
+  url: 127.0.0.1:5678/api/settings/preferences?max_speed=60&start_speed=25&sensitivity=2&child_lock=false&units_miles=false
+  body: none
+  auth: none
+}
+
+params:query {
+  max_speed: 60
+  start_speed: 25
+  sensitivity: 2
+  child_lock: false
+  units_miles: false
+}
