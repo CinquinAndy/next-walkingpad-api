@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from api.utils.logger import logger
+
+
 @dataclass
 class SessionData:
     """Exercise session data model"""
@@ -40,17 +43,29 @@ class ExerciseSession:
     @classmethod
     def from_db_row(cls, row: dict):
         """Create instance from database row"""
+        if not row:
+            raise ValueError("Cannot create ExerciseSession from empty data")
+
+        # Log the row data for debugging
+        logger.debug(f"Creating ExerciseSession from row: {row}")
+
+        # Ensure all required fields are present
+        required_fields = ['user_id', 'start_time', 'mode']
+        for field in required_fields:
+            if field not in row:
+                raise ValueError(f"Missing required field: {field}")
+
         return cls(
             id=row.get('id'),
-            user_id=row.get('user_id'),
-            start_time=row.get('start_time'),
+            user_id=row['user_id'],
+            start_time=row['start_time'],
             end_time=row.get('end_time'),
-            mode=row.get('mode'),
+            mode=row['mode'],
             steps=row.get('steps', 0),
-            distance_km=row.get('distance_km', 0),
-            duration_seconds=row.get('duration_seconds', 0),
-            calories=row.get('calories', 0),
-            average_speed=row.get('average_speed', 0),
+            distance_km=float(row.get('distance_km', 0)),
+            duration_seconds=int(row.get('duration_seconds', 0)),
+            calories=int(row.get('calories', 0)),
+            average_speed=float(row.get('average_speed', 0)),
             created_at=row.get('created_at')
         )
 

@@ -33,33 +33,59 @@ class ExerciseService:
             # Start device
             await self.device.start_walking()
 
-            # Create initial session object
-            session = ExerciseSession(
-                user_id=1,  # TODO: Get from auth
-                start_time=datetime.now(timezone.utc),
-                mode='manual'
-            )
+            current_time = datetime.now(timezone.utc)
 
             # Insert into database
             query = """
                 INSERT INTO exercise_sessions 
-                (user_id, start_time, mode, steps, distance_km, duration_seconds, calories, average_speed)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING *
-            """
-            result = self.db.execute_query(
-                query,
                 (
-                    session.user_id,
-                    session.start_time,
-                    session.mode,
-                    session.steps,
-                    session.distance_km,
-                    session.duration_seconds,
-                    session.calories,
-                    session.average_speed
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
                 )
+                VALUES 
+                (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING 
+                    id, 
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+            """
+
+            params = (
+                1,  # user_id
+                current_time,  # start_time
+                'manual',  # mode
+                0,  # steps
+                0.0,  # distance_km
+                0,  # duration_seconds
+                0,  # calories
+                0.0,  # average_speed
+                current_time  # created_at
             )
+
+            logger.debug(f"Executing insert with params: {params}")
+            result = self.db.execute_query(query, params)
+
+            if not result:
+                logger.error("Insert query did not return any results")
+                raise Exception("Failed to create exercise session - no data returned")
+
+            logger.debug(f"Insert result: {result}")
 
             # Create session from database result
             self.current_session = ExerciseSession.from_db_row(result[0])
@@ -68,7 +94,12 @@ class ExerciseService:
             return self.current_session
 
         except Exception as e:
-            logger.error(f"Failed to start session: {e}")
+            logger.error(f"Failed to start session: {str(e)}")
+            # Ensure device is stopped in case of error
+            try:
+                await self.device.stop_walking()
+            except:
+                pass
             raise
 
     async def end_session(self) -> ExerciseSession:

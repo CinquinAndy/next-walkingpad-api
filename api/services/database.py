@@ -21,25 +21,29 @@ class DatabaseService:
             logger.error(f"Failed to connect to database: {e}")
             raise
 
-    def execute_query(self, query: str, params: tuple = None) -> List[Dict]:
-        """Execute database query and return results"""
+    def execute_query(self, query: str, params=None):
+        """Execute a database query"""
         try:
-            cursor = self.conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query, params)
+            with self.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    logger.debug(f"Executing query: {query}")
+                    logger.debug(f"With parameters: {params}")
+                    cur.execute(query, params)
 
-            # Only try to fetch if it's a SELECT query
-            if query.strip().upper().startswith('SELECT'):
-                result = cursor.fetchall()
-            else:
-                self.conn.commit()
-                result = []
+                    if query.strip().upper().startswith('SELECT') or 'RETURNING' in query.upper():
+                        result = cur.fetchall()
+                        logger.debug(f"Query result: {result}")
+                        return result
 
-            cursor.close()
-            return result
-
+                    conn.commit()
+                    if 'RETURNING' in query.upper():
+                        result = cur.fetchall()
+                        logger.debug(f"Insert/Update result: {result}")
+                        return result
+                    return None
         except Exception as e:
-            self.conn.rollback()
-            raise e
+            logger.error(f"Database error: {str(e)}")
+            raise
 
     def initialize_db(self):
         """Initialize database with default data"""
