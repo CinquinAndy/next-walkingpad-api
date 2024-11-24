@@ -1,229 +1,503 @@
-# WalkingPad API
+# WalkingPad API - Functional Specifications
 
-A Flask-based REST API for controlling and managing KingSmith WalkingPad devices. This application provides a comprehensive interface for device control, exercise tracking, and data management.
+## 1. API Endpoints
 
-## Features
+### Device Control `/api/device`
 
-### Device Control
-- Real-time device status monitoring
-- Speed and mode control (Manual/Auto)
-- Device calibration and preferences
-- Bluetooth connection management
-
-### Exercise Tracking
-- Session management (start/stop/pause)
-- Real-time statistics (speed, distance, steps)
-- Historical data recording
-- Progress analytics
-
-### Goal Management
-- Custom exercise targets
-- Progress tracking
-- Achievement system
-- Activity streaks
-
-### Data Management
-- PostgreSQL database integration
-- Exercise history
-- User preferences
-- Device settings
-
-## Project Structure
-
-```
-walkingpad/
-├── api/
-│   ├── controllers/      # Route handlers
-│   ├── models/          # Data models
-│   ├── services/        # Business logic
-│   ├── utils/           # Helper functions
-│   └── config/          # Configuration
-├── scripts/             # Utility scripts
-├── logs/                # Application logs
-├── tests/               # Test suites
-└── docs/                # Documentation
+#### GET `/status`
+Gets the current state of the WalkingPad.
+```json
+{
+  "mode": "manual|auto|standby",
+  "belt_state": "idle|running|starting|standby",
+  "speed": 3.5,
+  "distance": 1.2,
+  "steps": 1500,
+  "time": 600,
+  "calories": 50,
+  "connected": true
+}
 ```
 
-## Prerequisites
-
-- Python 3.9+
-- PostgreSQL 12+
-- Bluetooth support
-- pip and virtualenv
-
-## Installation
-
-1. Create and activate virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+#### POST `/mode`
+Changes the operating mode.
+- Query params: `mode=manual|auto|standby`
+```json
+{
+  "success": true,
+  "mode": "manual"
+}
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
+#### POST `/speed`
+Adjusts the belt speed.
+- Query params: `speed=35` (3.5 km/h = 35)
+```json
+{
+  "success": true,
+  "current_speed": 3.5
+}
 ```
 
-3. Create configuration:
-```bash
-cp config.sample.yaml config.yaml
-# Edit config.yaml with your settings
+#### POST `/start`
+Starts the belt.
+- Query params: `speed` (optional)
+```json
+{
+  "success": true,
+  "status": "running"
+}
 ```
 
-4. Set up the database:
-```bash
-python scripts/setup_db.py
+#### POST `/stop`
+Stops the belt.
+```json
+{
+  "success": true,
+  "status": "stopped"
+}
 ```
 
-## Configuration
+### Exercise Sessions `/api/exercise`
 
-Create a `.env` file in the project root:
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=walkingpad
-DB_USER=your_user
-DB_PASSWORD=your_password
-DEVICE_ADDRESS=XX:XX:XX:XX:XX:XX
+#### POST `/start`
+Starts a new exercise session.
+```json
+{
+  "message": "Session started successfully",
+  "session_id": 123
+}
 ```
 
-## Device Connection
-
-1. Scan for WalkingPad devices:
-```bash
-python scripts/scan.py
+#### POST `/end`
+Ends the current session.
+```json
+{
+  "message": "Session ended successfully",
+  "data": {
+    "id": 123,
+    "duration_seconds": 600,
+    "distance_km": 1.2,
+    "steps": 1500,
+    "calories": 50,
+    "average_speed": 3.5
+  }
+}
 ```
 
-2. Note the MAC address and update your configuration
-
-3. Test the connection:
-```bash
-python scripts/test_connection.py
+#### GET `/history`
+Retrieves session history.
+- Query params: `page=1&per_page=10`
+```json
+{
+  "sessions": [{
+    "id": 123,
+    "start_time": "2024-01-01T10:00:00Z",
+    "end_time": "2024-01-01T10:30:00Z",
+    "duration_seconds": 1800,
+    "distance_km": 2.5,
+    "steps": 3000,
+    "calories": 150,
+    "average_speed": 3.5
+  }],
+  "total": 50,
+  "page": 1,
+  "pages": 5
+}
 ```
 
-## Running the Server
-
-Start the API server:
-```bash
-python app.py
+#### GET `/stats`
+Gets exercise statistics.
+- Query params: `period=daily|weekly|monthly`
+```json
+{
+  "total_sessions": 10,
+  "total_distance": 25.5,
+  "total_steps": 30000,
+  "total_duration": 18000,
+  "total_calories": 1500,
+  "average_speed": 3.5,
+  "period": "daily"
+}
 ```
 
-The server will start on `http://localhost:5678` by default.
+### Goals & Targets `/api/targets`
 
-## API Documentation
-
-### Device Control
-
-#### Get Status
-```http
-GET /api/device/status
+#### GET `/`
+Lists current goals.
+- Query params: `active=true|false`
+```json
+[{
+  "id": 1,
+  "type": "distance|steps|calories|duration",
+  "value": 5.0,
+  "start_date": "2024-01-01",
+  "end_date": "2024-12-31",
+  "completed": false
+}]
 ```
 
-#### Change Mode
-```http
-POST /api/device/mode?new_mode=manual
+#### POST `/`
+Creates a new goal.
+// Request
+```json
+{
+  "type": "distance",
+  "value": 5.0,
+  "start_date": "2024-01-01",
+  "end_date": "2024-12-31"
+}
 ```
-Modes: `standby`, `manual`, `auto`
+// Response
+```json
+{
+  "id": 1,
+  "type": "distance",
+  "value": 5.0,
+  "start_date": "2024-01-01",
+  "end_date": "2024-12-31",
+  "completed": false
+}
+```
 
-#### Set Speed
-```http
-POST /api/device/speed?speed=30
+#### GET `/progress`
+Tracks goal progress.
+```json
+{
+  "target": {
+    "id": 1,
+    "type": "distance",
+    "value": 5.0
+  },
+  "current_value": 2.5,
+  "progress": 50.0,
+  "completed": false
+}
 ```
-Speed is in km/h × 10 (e.g., 30 = 3.0 km/h)
+
+### Settings `/api/settings`
+
+#### GET `/preferences`
+Retrieves device preferences.
+```json
+{
+  "max_speed": 6.0,
+  "start_speed": 2.0,
+  "sensitivity": 2,
+  "child_lock": false,
+  "units_miles": false
+}
+```
+
+#### POST `/preferences`
+Updates preferences.
+- Query params:
+  - `max_speed`: 10-60 (1.0-6.0 km/h)
+  - `start_speed`: 10-30 (1.0-3.0 km/h)
+  - `sensitivity`: 1-3
+  - `child_lock`: true|false
+  - `units_miles`: true|false
+
+## 2. Data Management
 
 ### Exercise Sessions
+- Automatic session recording
+- Calorie calculation based on distance and duration
+- Real-time statistics tracking
+- Complete session history
 
-#### Start Session
+### Goals
+- Multiple goal types (distance, steps, calories, duration)
+- Automatic progress tracking
+- Configurable start and end dates
+- Automatically updated completion status
+
+### User Preferences
+- Customizable speed settings
+- Safety options (child lock)
+- Unit choice (km/miles)
+- Adjustable belt sensitivity
+
+### Real-time Data
+- Current speed
+- Distance covered
+- Step count
+- Exercise duration
+- Belt status
+- Operating mode
+
+## 3. Key Features
+
+1. **Device Control**
+   - Safe start/stop
+   - Precise speed control
+   - Mode switching (manual/auto)
+   - Belt calibration
+
+2. **Exercise Tracking**
+   - Timed sessions
+   - Automatic metric calculation
+   - Detailed history
+   - Aggregated statistics
+
+3. **Goal Management**
+   - Custom goal creation
+   - Progress tracking
+   - Completion notifications
+   - Achievement history
+
+4. **Settings and Configuration**
+   - User preferences
+   - Device configuration
+   - Safety options
+   - Unit customization
+
+## 4. Error Handling
+
+Each endpoint returns standardized errors:
+```json
+{
+  "error": "Error description",
+  "details": "Optional technical details"
+}
+```
+
+HTTP Codes used:
+- 200: Success
+- 400: Bad Request
+- 404: Resource Not Found
+- 500: Server Error
+
+## 5. Security
+
+- Input validation on all endpoints
+- Speed limit verification
+- Protection against invalid commands
+- Secure disconnection handling
+
+This API provides a complete interface for controlling the WalkingPad and managing exercise sessions, with emphasis on security and ease of use.
+
+## 6. Data Flows and Usage Scenarios
+
+### Scenario 1: Typical Exercise Session
+
+1. **Session Start**
 ```http
 POST /api/exercise/start
 ```
+- Initializes new session
+- Activates metric tracking
+- Returns unique session ID
 
-#### End Session
+2. **Treadmill Control**
+```http
+POST /api/device/mode?mode=manual
+POST /api/device/speed?speed=30  // 3.0 km/h
+```
+- Sets desired mode
+- Adjusts initial speed
+
+3. **Real-time Monitoring**
+```http
+GET /api/device/status
+```
+```json
+{
+  "mode": "manual",
+  "belt_state": "running",
+  "speed": 3.0,
+  "distance": 0.5,
+  "steps": 750,
+  "time": 300,
+  "calories": 25
+}
+```
+
+4. **Session End**
 ```http
 POST /api/exercise/end
 ```
+- Saves final statistics
+- Stops treadmill
+- Generates session summary
 
-#### Get History
-```http
-GET /api/exercise/history?page=1&per_page=10
-```
+### Scenario 2: Goal Management
 
-### Settings & Preferences
-
-#### Update Preferences
-```http
-POST /api/settings/preferences
-```
-Parameters:
-- `max_speed`: Maximum speed limit (10-60)
-- `start_speed`: Starting speed (10-30)
-- `sensitivity`: Sensitivity level (1=high, 2=medium, 3=low)
-- `child_lock`: Enable/disable child lock (true/false)
-- `units_miles`: Use miles instead of kilometers (true/false)
-
-### Targets & Goals
-
-#### Set Target
+1. **Goal Creation**
 ```http
 POST /api/targets
 Content-Type: application/json
 
 {
-    "type": "distance",
-    "value": 5.0,
-    "end_date": "2024-12-31"
+  "type": "distance",
+  "value": 100.0,
+  "end_date": "2024-12-31"
 }
 ```
 
-## Development
-
-### Running Tests
-```bash
-pytest tests/
+2. **Progress Tracking**
+```http
+GET /api/targets/progress
+```
+```json
+{
+  "targets": [
+    {
+      "id": 1,
+      "type": "distance",
+      "target_value": 100.0,
+      "current_value": 45.2,
+      "progress": 45.2,
+      "remaining": 54.8,
+      "days_left": 120
+    }
+  ]
+}
 ```
 
-### Code Style
-```bash
-black api/
-pylint api/
+## 7. Detailed Data Formats
+
+### Exercise Session
+```json
+{
+  "id": 123,
+  "user_id": 1,
+  "start_time": "2024-01-01T10:00:00Z",
+  "end_time": "2024-01-01T10:30:00Z",
+  "metrics": {
+    "duration_seconds": 1800,
+    "distance_km": 2.5,
+    "steps": 3000,
+    "calories": 150,
+    "average_speed": 3.5,
+    "max_speed": 4.0,
+    "min_speed": 2.5
+  },
+  "segments": [
+    {
+      "timestamp": "2024-01-01T10:00:00Z",
+      "speed": 3.0,
+      "distance": 0.0
+    },
+    {
+      "timestamp": "2024-01-01T10:15:00Z",
+      "speed": 3.5,
+      "distance": 1.25
+    }
+  ]
+}
 ```
 
-### Debugging
-Logs are stored in `logs/` directory with daily rotation.
+### Aggregated Statistics
+```json
+{
+  "daily": {
+    "date": "2024-01-01",
+    "sessions": 2,
+    "total_distance": 5.0,
+    "total_steps": 6000,
+    "total_calories": 300,
+    "active_minutes": 60
+  },
+  "weekly": {
+    "week_number": 1,
+    "year": 2024,
+    "sessions": 10,
+    "total_distance": 25.0,
+    "total_steps": 30000,
+    "total_calories": 1500,
+    "active_minutes": 300,
+    "days_active": 5
+  }
+}
+```
 
-## Contributing
+## 8. Monitoring and Diagnostics
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### System Status
+```http
+GET /api/health
+```
+```json
+{
+  "status": "healthy",
+  "components": {
+    "database": "connected",
+    "device": "connected",
+    "bluetooth": "active"
+  },
+  "metrics": {
+    "active_sessions": 1,
+    "connected_devices": 1,
+    "api_latency": "45ms"
+  }
+}
+```
 
-## Troubleshooting
+### Activity Logs
+```http
+GET /api/logs
+```
+```json
+{
+  "logs": [
+    {
+      "timestamp": "2024-01-01T10:00:00Z",
+      "level": "INFO",
+      "event": "session_started",
+      "details": {
+        "session_id": 123,
+        "initial_speed": 3.0
+      }
+    }
+  ]
+}
+```
 
-### Common Issues
+## 9. Frontend Integration
 
-1. **Bluetooth Connection**
-   - Ensure Bluetooth is enabled
-   - Check device pairing status
-   - Verify MAC address format
+### WebSocket Events
+```javascript
+// WebSocket Connection
+const ws = new WebSocket('ws://api/events');
 
-2. **Database Connection**
-   - Check PostgreSQL service status
-   - Verify connection credentials
-   - Ensure database exists
+// Available Events
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  switch(data.type) {
+    case 'speed_change':
+      updateSpeedDisplay(data.speed);
+      break;
+    case 'stats_update':
+      updateStats(data.stats);
+      break;
+    case 'target_achieved':
+      showAchievement(data.target);
+      break;
+  }
+};
+```
 
-3. **Device Communication**
-   - Reset WalkingPad if unresponsive
-   - Check Bluetooth signal strength
-   - Verify device firmware version
+### Recommended Polling
+- Device status: 1 second
+- Session statistics: 5 seconds
+- Goal progress: 30 seconds
 
-## License
+## 10. Limits and Constraints
 
-[MIT License](LICENSE)
+1. **Performance**
+   - Max 10 requests/second per client
+   - Maximum payload size: 1MB
+   - 1000 stored sessions limit
 
-## Acknowledgments
+2. **Security**
+   - Session timeout: 30 minutes
+   - Max 5 login attempts
+   - IP-based rate limiting
 
-- [ph4-walkingpad](https://github.com/ph4r05/ph4-walkingpad) for the base controller
-- [KingSmith](https://www.kingsmith.com/) for the WalkingPad device
+3. **Data**
+   - Data retention: 12 months
+   - Data export limited to 10000 entries
+   - Maximum file size: 50MB
+
+This documentation provides a comprehensive view of the API capabilities and practical usage. Would you like additional details about any specific aspect?
