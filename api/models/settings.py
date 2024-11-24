@@ -4,33 +4,65 @@ Settings related models
 from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
+from api.utils.logger import get_logger
+
+logger = get_logger()
 
 @dataclass
 class DeviceSettings:
     """Device settings model"""
-    max_speed: int = 60          # Maximum speed (10-60)
-    start_speed: int = 20        # Starting speed (10-30)
-    sensitivity: int = 2         # Sensitivity (1=high, 2=medium, 3=low)
-    child_lock: bool = False     # Child lock enabled
-    units_miles: bool = False    # Use miles instead of kilometers
+    max_speed: float = 6.0          # Maximum speed in km/h (1.0-6.0)
+    start_speed: float = 2.0        # Starting speed in km/h (1.0-3.0)
+    sensitivity: int = 2            # Sensitivity (1=high, 2=medium, 3=low)
+    child_lock: bool = False        # Child lock enabled
+    units_miles: bool = False       # Use miles instead of kilometers
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     def is_valid(self) -> bool:
-        """Validate settings values"""
-        return (
-            10 <= self.max_speed <= 60 and
-            10 <= self.start_speed <= 30 and
-            1 <= self.sensitivity <= 3 and
-            self.start_speed <= self.max_speed
-        )
+        """
+        Validate settings values
+        All speeds are in km/h
+        """
+        try:
+            # Validate speed ranges (in km/h)
+            max_speed_valid = 1.0 <= float(self.max_speed) <= 6.0
+            start_speed_valid = 1.0 <= float(self.start_speed) <= 3.0
+            speed_relation_valid = float(self.start_speed) <= float(self.max_speed)
+            sensitivity_valid = 1 <= int(self.sensitivity) <= 3
+
+            if not all([max_speed_valid, start_speed_valid,
+                        sensitivity_valid, speed_relation_valid]):
+                logger.warning(
+                    f"Invalid settings - max_speed: {self.max_speed} km/h, "
+                    f"start_speed: {self.start_speed} km/h, "
+                    f"sensitivity: {self.sensitivity}, "
+                    f"speed_relation_valid: {speed_relation_valid}"
+                )
+                return False
+
+            return True
+
+        except (ValueError, TypeError) as e:
+            logger.error(f"Validation error: {e}")
+            return False
+
+    def to_device_units(self) -> dict:
+        """Convert settings to device units"""
+        return {
+            'max_speed': int(float(self.max_speed) * 10),  # km/h to device units
+            'start_speed': int(float(self.start_speed) * 10),
+            'sensitivity': int(self.sensitivity),
+            'child_lock': self.child_lock,
+            'units_miles': self.units_miles
+        }
 
     def to_dict(self) -> dict:
-        """Convert settings to dictionary"""
+        """Convert settings to dictionary (in km/h)"""
         return {
-            'max_speed': self.max_speed / 10,  # Convert to km/h
-            'start_speed': self.start_speed / 10,
-            'sensitivity': self.sensitivity,
+            'max_speed': float(self.max_speed),
+            'start_speed': float(self.start_speed),
+            'sensitivity': int(self.sensitivity),
             'child_lock': self.child_lock,
             'units_miles': self.units_miles
         }

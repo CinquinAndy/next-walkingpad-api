@@ -2634,3 +2634,217 @@ bleak.exc.BleakDeviceNotFoundError: Device with address 85:20:00:11:EC:63 was no
 2024-11-24 23:30:11,841 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
 2024-11-24 23:30:11,842 - walkingpad - [INFO] - device:151 - [try to connect]
 2024-11-24 23:30:14,765 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 23:33:30,112 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:33:30,296 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:33:30,296 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:33:30,557 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:33:30,557 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:33:30,620 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:33:30,652 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:33:30,873 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:33:31,067 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:33:31,235 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:33:31,238 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:33:31,244 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:33:31,244 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:34:09,957 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:10,146 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:34:10,147 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:34:10,432 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:34:10,433 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:34:10,496 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:34:10,527 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:34:10,716 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:10,899 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:11,084 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:11,087 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:34:11,093 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:34:11,094 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:34:14,778 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:14,946 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:34:14,946 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:34:15,222 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:34:15,222 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:34:15,286 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:34:15,317 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:34:15,500 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:15,685 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:15,867 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:34:15,870 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:34:15,877 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:34:15,877 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:36:52,228 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:36:52,414 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:36:52,414 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:36:52,685 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:36:52,685 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:36:52,750 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:36:52,780 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:36:52,954 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:36:53,134 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:36:53,317 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:36:53,321 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:36:53,328 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:36:53,328 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:36:59,123 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:36:59,304 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:36:59,304 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:36:59,598 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:36:59,599 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:36:59,663 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:36:59,696 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:37:25,081 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:25,267 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:37:25,268 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:37:25,527 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:37:25,528 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:37:25,591 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:37:25,621 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:37:25,794 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:25,962 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:26,144 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:26,147 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:37:26,154 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:37:26,154 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:37:27,543 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:27,709 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:37:27,711 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:37:27,988 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:37:27,989 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:37:28,052 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:37:28,084 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:37:28,268 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:28,438 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:28,607 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:28,610 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:37:28,616 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:37:28,617 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:37:58,981 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:59,160 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:37:59,160 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:37:59,422 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:37:59,422 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:37:59,486 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:37:59,517 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:37:59,718 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:37:59,894 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:38:00,064 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:38:00,067 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:38:00,074 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:38:00,074 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:39:08,206 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:39:08,405 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 23:39:08,406 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 23:39:08,667 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 23:39:08,668 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 23:39:08,730 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 23:39:08,761 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 23:39:08,929 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:39:09,099 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:39:09,267 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 23:39:09,270 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 23:39:09,277 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 23:39:09,278 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:39:11,547 - walkingpad - [DEBUG] - settings:39 - Updating preferences: {'max_speed': 6.0, 'start_speed': 2.5, 'sensitivity': 2, 'child_lock': False, 'units_miles': False}
+2024-11-24 23:39:11,547 - walkingpad - [DEBUG] - settings:43 - Device units: {'max_speed': 60, 'start_speed': 25, 'sensitivity': 2, 'child_lock': False, 'units_miles': False}
+2024-11-24 23:39:11,548 - walkingpad - [INFO] - device:195 - Updating device preferences: max_speed=6.0, start_speed=2.5, sensitivity=2, child_lock=False, units_miles=False
+2024-11-24 23:39:11,548 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 23:39:13,647 - walkingpad - [DEBUG] - device:207 - Setting max speed to: 60
+2024-11-24 23:39:14,355 - walkingpad - [DEBUG] - device:211 - Setting start speed to: 25
+2024-11-24 23:39:15,064 - walkingpad - [DEBUG] - device:218 - Setting sensitivity to: 2
+2024-11-24 23:39:15,762 - walkingpad - [DEBUG] - device:223 - Setting child lock to: False
+2024-11-24 23:39:16,468 - walkingpad - [DEBUG] - device:228 - Setting units to miles: False
+2024-11-24 23:39:17,164 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 23:39:27,909 - walkingpad - [ERROR] - device:249 - Error while setting preferences: Device with address 85:20:00:11:EC:63 was not found.
+2024-11-24 23:39:28,604 - walkingpad - [ERROR] - settings:95 - Failed to update preferences: Failed to update device preferences: Device with address 85:20:00:11:EC:63 was not found.
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 233, in update_preferences
+    await self.get_status()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 165, in get_status
+    await self.connect()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 154, in connect
+    await self.controller.run(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 411, in run
+    await self.connect(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 331, in connect
+    return await self.client.connect(timeout=10.0, **kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\__init__.py", line 615, in connect
+    return await self._backend.connect(**kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\backends\winrt\client.py", line 293, in connect
+    raise BleakDeviceNotFoundError(
+bleak.exc.BleakDeviceNotFoundError: Device with address 85:20:00:11:EC:63 was not found.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\settings.py", line 46, in update_preferences
+    device_result = await device_service.update_preferences(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 250, in update_preferences
+    raise Exception(f"Failed to update device preferences: {str(e)}")
+Exception: Failed to update device preferences: Device with address 85:20:00:11:EC:63 was not found.
+2024-11-24 23:39:28,607 - walkingpad - [ERROR] - settings:61 - Failed to handle preferences: Failed to update device preferences: Device with address 85:20:00:11:EC:63 was not found.
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 233, in update_preferences
+    await self.get_status()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 165, in get_status
+    await self.connect()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 154, in connect
+    await self.controller.run(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 411, in run
+    await self.connect(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 331, in connect
+    return await self.client.connect(timeout=10.0, **kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\__init__.py", line 615, in connect
+    return await self._backend.connect(**kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\backends\winrt\client.py", line 293, in connect
+    raise BleakDeviceNotFoundError(
+bleak.exc.BleakDeviceNotFoundError: Device with address 85:20:00:11:EC:63 was not found.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\controllers\settings.py", line 47, in handle_preferences
+    updated = await settings_service.update_preferences(settings)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\settings.py", line 46, in update_preferences
+    device_result = await device_service.update_preferences(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 250, in update_preferences
+    raise Exception(f"Failed to update device preferences: {str(e)}")
+Exception: Failed to update device preferences: Device with address 85:20:00:11:EC:63 was not found.
+2024-11-24 23:39:42,234 - walkingpad - [INFO] - device:95 - [controllers device] - controllers
+2024-11-24 23:39:42,235 - walkingpad - [INFO] - device:151 - [try to connect]

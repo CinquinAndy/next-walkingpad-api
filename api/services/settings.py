@@ -38,9 +38,13 @@ class SettingsService:
         try:
             logger.debug(f"Updating preferences: {settings.to_dict()}")
 
+            # Convert settings to device units
+            device_settings = settings.to_device_units()
+            logger.debug(f"Device units: {device_settings}")
+
             # Update device first
             device_result = await device_service.update_preferences(
-                max_speed=settings.max_speed,
+                max_speed=settings.max_speed,  # Already converted in update_preferences
                 start_speed=settings.start_speed,
                 sensitivity=settings.sensitivity,
                 child_lock=settings.child_lock,
@@ -50,7 +54,7 @@ class SettingsService:
             if not device_result.get('success'):
                 raise Exception("Failed to update device preferences")
 
-            # Then update database
+            # Then update database (store in km/h)
             query = """
                 INSERT INTO device_settings 
                     (user_id, max_speed, start_speed, sensitivity, 
@@ -85,9 +89,7 @@ class SettingsService:
             if not result:
                 raise Exception("Failed to update preferences in database")
 
-            updated_settings = DeviceSettings(**result[0])
-            logger.info(f"Successfully updated preferences: {updated_settings.to_dict()}")
-            return updated_settings
+            return DeviceSettings(**result[0])
 
         except Exception as e:
             logger.error(f"Failed to update preferences: {e}", exc_info=True)
