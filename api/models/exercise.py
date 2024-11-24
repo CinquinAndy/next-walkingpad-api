@@ -13,10 +13,10 @@ class SessionData:
     """Exercise session data model"""
     steps: int
     distance: float  # in kilometers
-    duration: int    # in seconds
+    duration: int  # in seconds
     calories: Optional[int] = None
     avg_speed: Optional[float] = None
-    
+
     def is_valid(self) -> bool:
         """Validate session data"""
         return (
@@ -27,33 +27,20 @@ class SessionData:
 
 @dataclass
 class ExerciseSession:
-    def __init__(
-        self,
-        id: int,
-        user_id: int,
-        start_time: datetime,
-        mode: str,
-        steps: int = 0,
-        distance_km: float = 0.0,
-        duration_seconds: int = 0,
-        calories: int = 0,
-        average_speed: float = 0.0,
-        end_time: datetime = None,
-        created_at: datetime = None,
-        updated_at: datetime = None
-    ):
-        self.id = id
-        self.user_id = user_id
-        self.start_time = start_time
-        self.end_time = end_time
-        self.mode = mode
-        self.steps = steps
-        self.distance_km = distance_km
-        self.duration_seconds = duration_seconds
-        self.calories = calories
-        self.average_speed = average_speed
-        self.created_at = created_at
-        self.updated_at = updated_at
+    """Exercise session model"""
+    id: int
+    user_id: int
+    start_time: datetime
+    mode: str
+    steps: int = 0
+    distance_km: float = 0.0
+    duration_seconds: int = 0
+    calories: int = 0
+    average_speed: float = 0.0
+    end_time: Optional[datetime] = None
+    max_speed: Optional[float] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     @classmethod
     def from_db_row(cls, row: dict):
@@ -61,17 +48,10 @@ class ExerciseSession:
         if not row:
             raise ValueError("Cannot create ExerciseSession from empty data")
 
-        # Log the row data for debugging
         logger.debug(f"Creating ExerciseSession from row: {row}")
 
-        # Ensure all required fields are present
-        required_fields = ['user_id', 'start_time', 'mode']
-        for field in required_fields:
-            if field not in row:
-                raise ValueError(f"Missing required field: {field}")
-
         return cls(
-            id=row.get('id'),
+            id=row['id'],
             user_id=row['user_id'],
             start_time=row['start_time'],
             end_time=row.get('end_time'),
@@ -81,22 +61,29 @@ class ExerciseSession:
             duration_seconds=int(row.get('duration_seconds', 0)),
             calories=int(row.get('calories', 0)),
             average_speed=float(row.get('average_speed', 0)),
-            created_at=row.get('created_at')
+            max_speed=float(row.get('max_speed')) if row.get('max_speed') is not None else None,
+            created_at=row.get('created_at'),
+            updated_at=row.get('updated_at')
         )
 
     def to_dict(self) -> dict:
         """Convert session to dictionary"""
         return {
             'id': self.id,
+            'user_id': self.user_id,
             'start_time': self.start_time.isoformat(),
             'end_time': self.end_time.isoformat() if self.end_time else None,
-            'duration': self.duration_seconds,
-            'distance': self.distance_km,
+            'mode': self.mode,
             'steps': self.steps,
+            'distance_km': round(self.distance_km, 2),
+            'duration_seconds': self.duration_seconds,
             'calories': self.calories,
-            'average_speed': self.average_speed,
-            'mode': self.mode
+            'average_speed': round(self.average_speed, 2),
+            'max_speed': round(self.max_speed, 2) if self.max_speed is not None else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
 
 @dataclass
 class ExerciseHistory:
@@ -105,6 +92,16 @@ class ExerciseHistory:
     total: int
     page: int
     pages: int
+
+    def to_dict(self) -> dict:
+        """Convert history to dictionary"""
+        return {
+            'sessions': [session.to_dict() for session in self.sessions],
+            'total': self.total,
+            'page': self.page,
+            'pages': self.pages
+        }
+
 
 @dataclass
 class ExerciseStats:
@@ -116,7 +113,7 @@ class ExerciseStats:
     total_calories: int
     average_speed: float
     period: str  # daily, weekly, monthly
-    
+
     def to_dict(self) -> dict:
         """Convert stats to dictionary"""
         return {
@@ -125,6 +122,6 @@ class ExerciseStats:
             'total_steps': self.total_steps,
             'total_duration': self.total_duration,
             'total_calories': self.total_calories,
-            'average_speed': round(self.average_speed, 1),
+            'average_speed': round(self.average_speed, 2),
             'period': self.period
         }

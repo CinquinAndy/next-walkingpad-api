@@ -64,13 +64,9 @@ async def get_history():
         per_page = int(request.args.get('per_page', 10))
 
         history = await exercise_service.get_history(page, per_page)
-        return jsonify({
-            'sessions': [session.to_dict() for session in history.sessions],
-            'total': history.total,
-            'page': history.page,
-            'pages': history.pages
-        })
+        return jsonify(history.to_dict())
     except Exception as e:
+        logger.error(f"Failed to get exercise history: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
