@@ -1,0 +1,15 @@
+meta {
+  name: POST start with speed
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://127.0.0.1:5678/api/device/start?speed=25
+  body: none
+  auth: none
+}
+
+params:query {
+  speed: 25
+}
