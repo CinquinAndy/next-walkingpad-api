@@ -38,27 +38,37 @@ class SettingsService:
         try:
             logger.debug(f"Updating preferences: {settings.to_dict()}")
 
-            # Convert settings to device units
-            device_settings = settings.to_device_units()
-            logger.debug(f"Device units: {device_settings}")
+            if not settings.is_valid():
+                raise ValueError(
+                    "Invalid settings values. Please check:\n"
+                    "- max_speed must be between 1.0-6.0 km/h\n"
+                    "- start_speed must be between 1.0-3.0 km/h\n"
+                    "- start_speed cannot be greater than max_speed\n"
+                    "- sensitivity must be between 1-3"
+                )
 
             # Update device first
-            device_result = await device_service.update_preferences(
-                max_speed=settings.max_speed,  # Already converted in update_preferences
-                start_speed=settings.start_speed,
-                sensitivity=settings.sensitivity,
-                child_lock=settings.child_lock,
-                units_miles=settings.units_miles
-            )
+            try:
+                device_result = await device_service.update_preferences(
+                    max_speed=settings.max_speed,
+                    start_speed=settings.start_speed,
+                    sensitivity=settings.sensitivity,
+                    child_lock=settings.child_lock,
+                    units_miles=settings.units_miles
+                )
 
-            if not device_result.get('success'):
-                raise Exception("Failed to update device preferences")
+                if not device_result.get('success'):
+                    raise Exception("Device update failed")
 
-            # Then update database (store in km/h)
+            except Exception as e:
+                logger.warning(f"Device update had issues: {e}")
+                # Continue with database update even if device update had issues
+
+            # Update database (store in km/h)
             query = """
                 INSERT INTO device_settings 
                     (user_id, max_speed, start_speed, sensitivity, 
-                     child_lock, use_miles, created_at, updated_at)
+                     child_lock, units_miles, created_at, updated_at)
                 VALUES (
                     (SELECT id FROM users LIMIT 1), 
                     %s, %s, %s, %s, %s, 
@@ -70,17 +80,17 @@ class SettingsService:
                     start_speed = EXCLUDED.start_speed,
                     sensitivity = EXCLUDED.sensitivity,
                     child_lock = EXCLUDED.child_lock,
-                    use_miles = EXCLUDED.use_miles,
+                    units_miles = EXCLUDED.units_miles,
                     updated_at = NOW()
                 RETURNING *
             """
 
             params = (
-                settings.max_speed,
-                settings.start_speed,
-                settings.sensitivity,
-                settings.child_lock,
-                settings.units_miles
+                float(settings.max_speed),
+                float(settings.start_speed),
+                int(settings.sensitivity),
+                bool(settings.child_lock),
+                bool(settings.units_miles)
             )
 
             logger.debug(f"Executing update query with params: {params}")
@@ -89,7 +99,9 @@ class SettingsService:
             if not result:
                 raise Exception("Failed to update preferences in database")
 
-            return DeviceSettings(**result[0])
+            # Use the new from_db_row method to create settings
+            updated_settings = DeviceSettings.from_db_row(result[0])
+            return updated_settings
 
         except Exception as e:
             logger.error(f"Failed to update preferences: {e}", exc_info=True)

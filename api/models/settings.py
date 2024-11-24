@@ -1,8 +1,8 @@
 """
 Settings related models
 """
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, Dict, Any
 from datetime import datetime
 from api.utils.logger import get_logger
 
@@ -19,6 +19,33 @@ class DeviceSettings:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    @classmethod
+    def from_db_row(cls, row: Dict[str, Any]) -> 'DeviceSettings':
+        """Create settings from database row, ignoring extra fields"""
+        valid_fields = {
+            'max_speed': float,
+            'start_speed': float,
+            'sensitivity': int,
+            'child_lock': bool,
+            'units_miles': bool,
+            'created_at': datetime,
+            'updated_at': datetime
+        }
+
+        # Filter and convert fields
+        settings_data = {}
+        for field, field_type in valid_fields.items():
+            if field in row:
+                # Convert field to correct type
+                value = row[field]
+                if field_type == bool and isinstance(value, (int, str)):
+                    value = bool(value)
+                elif field_type in (int, float) and value is not None:
+                    value = field_type(value)
+                settings_data[field] = value
+
+        return cls(**settings_data)
+
     def is_valid(self) -> bool:
         """
         Validate settings values
@@ -26,18 +53,26 @@ class DeviceSettings:
         """
         try:
             # Validate speed ranges (in km/h)
-            max_speed_valid = 1.0 <= float(self.max_speed) <= 6.0
-            start_speed_valid = 1.0 <= float(self.start_speed) <= 3.0
-            speed_relation_valid = float(self.start_speed) <= float(self.max_speed)
-            sensitivity_valid = 1 <= int(self.sensitivity) <= 3
+            max_speed = float(self.max_speed)
+            start_speed = float(self.start_speed)
+            sensitivity = int(self.sensitivity)
+
+            # Check individual constraints
+            max_speed_valid = 1.0 <= max_speed <= 6.0
+            start_speed_valid = 1.0 <= start_speed <= 3.0
+            sensitivity_valid = 1 <= sensitivity <= 3
+
+            # Check speed relationship
+            speed_relation_valid = start_speed <= max_speed
 
             if not all([max_speed_valid, start_speed_valid,
                         sensitivity_valid, speed_relation_valid]):
                 logger.warning(
-                    f"Invalid settings - max_speed: {self.max_speed} km/h, "
-                    f"start_speed: {self.start_speed} km/h, "
-                    f"sensitivity: {self.sensitivity}, "
-                    f"speed_relation_valid: {speed_relation_valid}"
+                    f"Invalid settings validation results:\n"
+                    f"- max_speed_valid ({max_speed}): {max_speed_valid}\n"
+                    f"- start_speed_valid ({start_speed}): {start_speed_valid}\n"
+                    f"- sensitivity_valid ({sensitivity}): {sensitivity_valid}\n"
+                    f"- speed_relation_valid: {speed_relation_valid}"
                 )
                 return False
 
@@ -63,8 +98,10 @@ class DeviceSettings:
             'max_speed': float(self.max_speed),
             'start_speed': float(self.start_speed),
             'sensitivity': int(self.sensitivity),
-            'child_lock': self.child_lock,
-            'units_miles': self.units_miles
+            'child_lock': bool(self.child_lock),
+            'units_miles': bool(self.units_miles),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 @dataclass

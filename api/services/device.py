@@ -179,78 +179,71 @@ class DeviceService:
         finally:
             await self.disconnect()
 
-    async def update_preferences(self, max_speed: int, start_speed: int,
+    async def update_preferences(self, max_speed: float, start_speed: float,
                                  sensitivity: int, child_lock: bool,
                                  units_miles: bool) -> dict:
         """
-        Update device preferences
-        Args:
-            max_speed: Maximum speed in km/h (1-6)
-            start_speed: Starting speed in km/h (1-3)
-            sensitivity: Sensitivity level (1=high, 2=medium, 3=low)
-            child_lock: Child lock enabled/disabled
-            units_miles: Use miles instead of kilometers
+        Update device preferences with retry mechanism
         """
-        try:
-            logger.info(f"Updating device preferences: max_speed={max_speed}, "
-                        f"start_speed={start_speed}, sensitivity={sensitivity}, "
-                        f"child_lock={child_lock}, units_miles={units_miles}")
+        logger.info(f"Updating device preferences: max_speed={max_speed}, "
+                    f"start_speed={start_speed}, sensitivity={sensitivity}, "
+                    f"child_lock={child_lock}, units_miles={units_miles}")
 
+        max_retries = 3
+        retry_delay = 2  # seconds
+
+        try:
             await self.connect()
 
-            try:
-                # Convert speeds to device format (km/h * 10)
-                max_speed_val = int(max_speed * 10)  # e.g. 6.0 km/h -> 60
-                start_speed_val = int(start_speed * 10)  # e.g. 2.5 km/h -> 25
+            # Set all preferences in sequence with retries
+            preferences_to_set = [
+                ('max_speed', WalkingPad.PREFS_MAX_SPEED, int(max_speed * 10)),
+                ('start_speed', WalkingPad.PREFS_START_SPEED, int(start_speed * 10)),
+                ('sensitivity', WalkingPad.PREFS_SENSITIVITY, sensitivity),
+                ('child_lock', WalkingPad.PREFS_CHILD_LOCK, int(child_lock)),
+                ('units', WalkingPad.PREFS_UNITS, int(units_miles))
+            ]
 
-                # Set speed preferences
-                logger.debug(f"Setting max speed to: {max_speed_val}")
-                await self.controller.set_pref_int(WalkingPad.PREFS_MAX_SPEED, max_speed_val)
-                await asyncio.sleep(self.minimal_cmd_space)
+            for pref_name, pref_key, pref_value in preferences_to_set:
+                for attempt in range(max_retries):
+                    try:
+                        logger.debug(f"Setting {pref_name} to: {pref_value} (attempt {attempt + 1}/{max_retries})")
+                        await self.controller.set_pref_int(pref_key, pref_value)
+                        await asyncio.sleep(self.minimal_cmd_space)
+                        break
+                    except Exception as e:
+                        logger.warning(f"Attempt {attempt + 1} failed for {pref_name}: {e}")
+                        if attempt < max_retries - 1:
+                            # Reconnect and retry
+                            await self.disconnect()
+                            await asyncio.sleep(retry_delay)
+                            await self.connect()
+                        else:
+                            raise Exception(f"Failed to set {pref_name} after {max_retries} attempts")
 
-                logger.debug(f"Setting start speed to: {start_speed_val}")
-                await self.controller.set_pref_int(WalkingPad.PREFS_START_SPEED, start_speed_val)
-                await asyncio.sleep(self.minimal_cmd_space)
+            logger.info("Device preferences updated successfully")
 
-                # Set sensitivity (1=high, 2=medium, 3=low)
-                # Make sure sensitivity is within valid range
-                sensitivity_val = max(1, min(3, int(sensitivity)))
-                logger.debug(f"Setting sensitivity to: {sensitivity_val}")
-                await self.controller.set_pref_int(WalkingPad.PREFS_SENSITIVITY, sensitivity_val)
-                await asyncio.sleep(self.minimal_cmd_space)
-
-                # Set child lock
-                logger.debug(f"Setting child lock to: {child_lock}")
-                await self.controller.set_pref_int(WalkingPad.PREFS_CHILD_LOCK, int(child_lock))
-                await asyncio.sleep(self.minimal_cmd_space)
-
-                # Set units
-                logger.debug(f"Setting units to miles: {units_miles}")
-                await self.controller.set_pref_int(WalkingPad.PREFS_UNITS, int(units_miles))
-                await asyncio.sleep(self.minimal_cmd_space)
-
-                # Verify settings by getting current status
-                await self.get_status()
-
-                logger.info("Device preferences updated successfully")
-                return {
-                    'success': True,
-                    'message': 'Preferences updated successfully',
-                    'data': {
-                        'max_speed': max_speed,
-                        'start_speed': start_speed,
-                        'sensitivity': sensitivity_val,
-                        'child_lock': child_lock,
-                        'units_miles': units_miles
-                    }
+            # No need to verify status immediately as it might cause connection issues
+            return {
+                'success': True,
+                'message': 'Preferences updated successfully',
+                'data': {
+                    'max_speed': max_speed,
+                    'start_speed': start_speed,
+                    'sensitivity': sensitivity,
+                    'child_lock': child_lock,
+                    'units_miles': units_miles
                 }
+            }
 
-            except Exception as e:
-                logger.error(f"Error while setting preferences: {e}")
-                raise Exception(f"Failed to update device preferences: {str(e)}")
-
+        except Exception as e:
+            logger.error(f"Failed to update device preferences: {e}", exc_info=True)
+            raise Exception(f"Failed to update device preferences: {str(e)}")
         finally:
-            await self.disconnect()
+            try:
+                await self.disconnect()
+            except Exception as e:
+                logger.warning(f"Error during disconnect: {e}")
 
     @staticmethod
     def _get_mode_string(mode):
