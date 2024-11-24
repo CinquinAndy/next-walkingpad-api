@@ -4,3 +4,143 @@
 2024-11-24 17:29:22,382 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
 2024-11-24 17:29:23,588 - walkingpad - INFO - Application initialized successfully
 2024-11-24 17:29:23,589 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:30:26,420 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:30:26,421 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:31:29,164 - walkingpad - INFO - Registering blueprints
+2024-11-24 17:31:29,169 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:31:29,170 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:31:32,635 - walkingpad - INFO - Registering blueprints
+2024-11-24 17:31:32,640 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:31:32,641 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:32:09,822 - walkingpad - INFO - [controllers __init__] - Registering blueprints
+2024-11-24 17:32:09,829 - walkingpad - INFO - Application initialized successfully
+2024-11-24 17:32:09,829 - walkingpad - INFO - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:34:03,589 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 17:34:03,596 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 17:34:03,596 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:34:04,788 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 17:34:04,794 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 17:34:04,795 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:35:24,866 - walkingpad - [ERROR] - device:98 - Status check failed: No address given to connect to
+2024-11-24 17:36:12,173 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 17:36:12,179 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 17:36:12,180 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:37:25,340 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 17:37:25,347 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 17:37:25,347 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:37:27,765 - walkingpad - [INFO] - device:94 - [controllers device] - controllers
+2024-11-24 17:37:28,460 - walkingpad - [ERROR] - device:99 - Status check failed: No address given to connect to
+2024-11-24 17:37:56,606 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 17:37:56,612 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 17:37:56,613 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 17:37:58,225 - walkingpad - [INFO] - device:94 - [controllers device] - controllers
+2024-11-24 17:37:58,226 - walkingpad - [INFO] - device:45 - [try to connect]
+2024-11-24 17:37:58,933 - walkingpad - [ERROR] - device:99 - Status check failed: No address given to connect to
+2024-11-24 17:39:20,758 - walkingpad - [INFO] - device:94 - [controllers device] - controllers
+2024-11-24 17:39:20,759 - walkingpad - [INFO] - device:45 - [try to connect]
+2024-11-24 17:39:23,165 - walkingpad - [INFO] - device:60 - [service device] - after connect
+2024-11-24 17:39:48,316 - walkingpad - [INFO] - device:94 - [controllers device] - controllers
+2024-11-24 17:39:48,317 - walkingpad - [INFO] - device:45 - [try to connect]
+2024-11-24 17:39:50,413 - walkingpad - [INFO] - device:60 - [service device] - after connect
+2024-11-24 18:12:04,458 - walkingpad - [ERROR] - device:88 - Mode change failed: 'DeviceService' object has no attribute 'set_mode'
+2024-11-24 18:12:15,261 - walkingpad - [ERROR] - device:42 - Start walking failed: 'DeviceService' object has no attribute 'start_walking'
+2024-11-24 18:13:02,684 - walkingpad - [ERROR] - device:42 - Start walking failed: 'DeviceService' object has no attribute 'start_walking'
+2024-11-24 18:13:05,823 - walkingpad - [ERROR] - device:88 - Mode change failed: 'DeviceService' object has no attribute 'set_mode'
+2024-11-24 18:15:33,694 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:15:33,702 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:15:33,704 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:15:36,222 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:15:36,230 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:15:36,231 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:15:37,197 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:15:37,198 - walkingpad - [ERROR] - device:43 - Start walking failed: 'DeviceService' object has no attribute 'start_walking'
+2024-11-24 18:16:09,509 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:16:09,515 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:16:09,516 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:16:20,258 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:16:20,264 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:16:20,264 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:16:22,663 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:16:22,663 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:16:22,664 - walkingpad - [INFO] - device:85 - [try to connect]
+2024-11-24 18:16:25,118 - walkingpad - [ERROR] - device:61 - Failed to start walking pad: 'Controller' object has no attribute 'start'
+2024-11-24 18:16:29,013 - walkingpad - [ERROR] - device:43 - Start walking failed: 'Controller' object has no attribute 'start'
+2024-11-24 18:17:30,475 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:17:30,481 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:17:30,482 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:17:44,570 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:17:44,578 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:17:44,578 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:17:47,949 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:17:47,949 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:17:47,951 - walkingpad - [INFO] - device:147 - [try to connect]
+2024-11-24 18:17:50,288 - walkingpad - [ERROR] - device:61 - Failed to start walking pad: 'Controller' object has no attribute 'start'
+2024-11-24 18:17:54,211 - walkingpad - [ERROR] - device:43 - Start walking failed: 'Controller' object has no attribute 'start'
+2024-11-24 18:18:41,624 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:18:41,631 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:18:41,631 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:21:22,810 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:21:22,815 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:21:22,816 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:21:25,619 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:21:25,619 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:21:25,620 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:21:28,864 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:21:40,326 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:21:40,326 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:21:40,327 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:21:43,295 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:23:00,477 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:23:00,477 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: 25
+2024-11-24 18:23:00,478 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:23:04,141 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:23:47,791 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 18:23:47,791 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:23:48,758 - walkingpad - [ERROR] - device:81 - Failed to stop walking pad: Could not get GATT services: Unreachable
+2024-11-24 18:23:49,454 - walkingpad - [ERROR] - device:53 - Stop walking failed: Could not get GATT services: Unreachable
+2024-11-24 18:23:51,579 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 18:23:51,580 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:23:54,941 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 18:24:00,463 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:24:00,464 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: 25
+2024-11-24 18:24:00,464 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:24:04,149 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:24:10,462 - walkingpad - [INFO] - device:105 - Setting mode to: manual
+2024-11-24 18:24:10,462 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:24:13,563 - walkingpad - [INFO] - device:122 - Mode set successfully to manual
+2024-11-24 18:24:19,605 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:24:19,606 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: 25
+2024-11-24 18:24:19,607 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:24:23,934 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:24:38,404 - walkingpad - [INFO] - device:95 - [controllers device] - controllers
+2024-11-24 18:24:38,405 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:24:40,583 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 18:25:43,822 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 18:25:43,822 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:25:47,326 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 18:25:51,233 - walkingpad - [INFO] - device:34 - [controllers device - start]
+2024-11-24 18:25:51,234 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 18:25:51,234 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:25:53,998 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 18:26:38,353 - walkingpad - [INFO] - device:88 - Setting speed to: 30
+2024-11-24 18:26:38,353 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:26:40,460 - walkingpad - [ERROR] - device:98 - Failed to set speed: byte must be in range(0, 256)
+2024-11-24 18:27:30,204 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:27:30,211 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:27:30,211 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:27:35,023 - walkingpad - [INFO] - device:61 - Setting speed to 30
+2024-11-24 18:27:35,024 - walkingpad - [INFO] - device:88 - Setting speed to: 30
+2024-11-24 18:27:35,025 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:27:37,248 - walkingpad - [ERROR] - device:98 - Failed to set speed: byte must be in range(0, 256)
+2024-11-24 18:27:50,122 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:27:50,129 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:27:50,129 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:28:34,601 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:28:34,607 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:28:34,608 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 18:28:38,489 - walkingpad - [INFO] - device:88 - Setting speed to: 30
+2024-11-24 18:28:38,490 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:28:42,281 - walkingpad - [INFO] - device:94 - Speed set successfully to 30
+2024-11-24 18:28:48,013 - walkingpad - [INFO] - device:88 - Setting speed to: 25
+2024-11-24 18:28:48,013 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:28:50,865 - walkingpad - [INFO] - device:94 - Speed set successfully to 25
