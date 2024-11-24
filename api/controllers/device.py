@@ -31,6 +31,7 @@ async def disconnect_device():
 
 @bp.route('/start', methods=['POST'])
 async def start_walking():
+    logger.info("[controllers device - start]")
     """Start walking session"""
     try:
         speed = request.args.get('speed', type=int)
@@ -91,6 +92,7 @@ async def set_mode():
 @bp.route('/status', methods=['GET'])
 async def get_device_status():
     """Get device status"""
+    logger.info("[controllers device] - controllers")
     try:
         status = await device_service.get_status()
         return jsonify(status)
