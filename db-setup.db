@@ -1,0 +1,116 @@
+/**
+ * WalkingPad Database Schema
+ * Comprehensive schema for tracking exercise data, user preferences, and device settings
+ */
+
+-- Users table for managing multiple users
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100) UNIQUE NOT NULL,
+    height_cm INTEGER,
+    weight_kg FLOAT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Device settings per user
+CREATE TABLE device_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    max_speed FLOAT NOT NULL DEFAULT 6.0,
+    start_speed FLOAT NOT NULL DEFAULT 2.0,
+    sensitivity INTEGER NOT NULL DEFAULT 2, -- 1=high, 2=medium, 3=low
+    child_lock BOOLEAN NOT NULL DEFAULT false,
+    use_miles BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
+-- Exercise sessions tracking
+CREATE TABLE exercise_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE,
+    duration_seconds INTEGER,
+    distance_km FLOAT,
+    steps INTEGER,
+    calories INTEGER,
+    average_speed FLOAT,
+    max_speed FLOAT,
+    mode VARCHAR(10) CHECK (mode IN ('manual', 'auto')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Exercise targets
+CREATE TABLE exercise_targets (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    type VARCHAR(20) CHECK (type IN ('distance', 'steps', 'calories', 'duration')),
+    value FLOAT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    completed BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, type, start_date)
+);
+
+-- Detailed session data for charts and analysis
+CREATE TABLE session_details (
+    id SERIAL PRIMARY KEY,
+    session_id INTEGER REFERENCES exercise_sessions(id),
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    speed FLOAT,
+    heart_rate INTEGER, -- Pour une future intégration
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Achievement tracking
+CREATE TABLE achievements (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    type VARCHAR(50) NOT NULL,
+    value FLOAT,
+    earned_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Activity streaks
+CREATE TABLE activity_streaks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    days_count INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index definitions for performance
+CREATE INDEX idx_exercise_sessions_user_id ON exercise_sessions(user_id);
+CREATE INDEX idx_exercise_sessions_start_time ON exercise_sessions(start_time);
+CREATE INDEX idx_session_details_session_id ON session_details(session_id);
+CREATE INDEX idx_exercise_targets_user_id ON exercise_targets(user_id);
+CREATE INDEX idx_achievements_user_id ON achievements(user_id);
+
+-- Trigger to update timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply update timestamp trigger to relevant tables
+CREATE TRIGGER update_users_modtime
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_device_settings_modtime
+    BEFORE UPDATE ON device_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
