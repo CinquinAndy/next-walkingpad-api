@@ -334,3 +334,442 @@ LINE 2:                 INSERT INTO users (id, username, weight_kg, ...
 2024-11-24 18:53:54,130 - walkingpad - [DEBUG] - exercise:88 - Insert result: [RealDictRow([('id', 6), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc))])]
 2024-11-24 18:53:54,131 - walkingpad - [DEBUG] - exercise:50 - Creating ExerciseSession from row: RealDictRow([('id', 6), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc))])
 2024-11-24 18:53:54,131 - walkingpad - [INFO] - exercise:92 - Started new session: 6
+2024-11-24 18:55:29,805 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:55:31,970 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 18:55:36,756 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT weight_kg FROM users WHERE id = %s
+2024-11-24 18:55:36,759 - walkingpad - [DEBUG] - database:30 - With parameters: (1,)
+2024-11-24 18:55:36,823 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('weight_kg', 89.1)])]
+2024-11-24 18:55:36,856 - walkingpad - [ERROR] - exercise:163 - Failed to end session: object list can't be used in 'await' expression
+2024-11-24 18:56:46,724 - walkingpad - [INFO] - device:95 - [controllers device] - controllers
+2024-11-24 18:56:46,725 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 18:56:48,816 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 18:57:45,635 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:57:45,800 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 18:57:45,801 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 18:57:46,088 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 18:57:46,089 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 18:57:46,152 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 18:57:46,184 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 18:57:46,382 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:57:46,569 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 18:57:46,572 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 18:57:46,578 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 18:57:46,578 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:02:39,666 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:02:39,858 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:02:39,858 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:02:40,136 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:02:40,137 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:02:40,201 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:02:40,243 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:02:40,421 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:02:40,605 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:02:40,609 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:02:40,615 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:02:40,616 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:03:46,752 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:03:46,920 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:03:46,922 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:03:47,195 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:03:47,195 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:03:47,259 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:03:47,291 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:03:47,459 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:03:47,629 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:03:47,632 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:03:47,638 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:03:47,638 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:03:50,212 - walkingpad - [INFO] - exercise:107 - Attempting to end exercise session
+2024-11-24 19:03:50,213 - walkingpad - [ERROR] - exercise:110 - No active session found
+2024-11-24 19:05:32,277 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:32,443 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:05:32,443 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:05:32,700 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:05:32,701 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:05:32,766 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:05:32,796 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:05:32,965 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:33,136 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:33,140 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:05:33,146 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:05:33,146 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:05:34,512 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:34,679 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:05:34,679 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:05:34,939 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:05:34,939 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:05:35,003 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:05:35,034 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:05:35,204 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:35,388 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:05:35,391 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:05:35,397 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:05:35,397 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:05:37,297 - walkingpad - [INFO] - exercise:107 - Attempting to end exercise session
+2024-11-24 19:05:37,297 - walkingpad - [ERROR] - exercise:110 - No active session found
+2024-11-24 19:06:10,795 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:06:10,960 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:06:10,961 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:06:11,263 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:06:11,264 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:06:11,330 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:06:11,362 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:06:11,558 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:06:11,743 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:06:11,747 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:06:11,755 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:06:11,755 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:06:13,358 - walkingpad - [INFO] - exercise:107 - Attempting to end exercise session
+2024-11-24 19:06:13,525 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                SELECT * FROM exercise_sessions 
+                WHERE end_time IS NULL 
+                ORDER BY start_time DESC 
+                LIMIT 1
+            
+2024-11-24 19:06:13,526 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:06:13,595 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 6), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:06:13,627 - walkingpad - [INFO] - exercise:120 - Found active session in database
+2024-11-24 19:06:13,628 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 6), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 17, 53, 53, 866418, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:06:13,628 - walkingpad - [INFO] - exercise:126 - Attempting to end exercise session
+2024-11-24 19:06:13,629 - walkingpad - [DEBUG] - exercise:133 - Stopping walking pad device
+2024-11-24 19:06:13,629 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 19:06:13,630 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:06:16,393 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 19:06:20,292 - walkingpad - [DEBUG] - exercise:136 - Getting device status
+2024-11-24 19:06:20,292 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:06:23,020 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 19:06:27,630 - walkingpad - [DEBUG] - exercise:138 - Device status received: {'mode': 'manual', 'belt_state': 'idle', 'distance': 0.0, 'time': 0, 'steps': 0, 'speed': 0.0}
+2024-11-24 19:06:27,630 - walkingpad - [DEBUG] - exercise:141 - Getting user weight for user_id: 1
+2024-11-24 19:06:27,798 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT weight_kg FROM users WHERE id = %s
+2024-11-24 19:06:27,798 - walkingpad - [DEBUG] - database:30 - With parameters: (1,)
+2024-11-24 19:06:27,862 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('weight_kg', 89.1)])]
+2024-11-24 19:06:27,893 - walkingpad - [DEBUG] - exercise:145 - User weight: 89.1
+2024-11-24 19:06:27,894 - walkingpad - [DEBUG] - exercise:151 - Calculating calories for: distance=0, duration=0.0, weight=89.1
+2024-11-24 19:06:27,894 - walkingpad - [ERROR] - exercise:204 - Error ending session: float division by zero
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\exercise.py", line 152, in end_session
+    calories = calculate_calories(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\utils\helpers.py", line 21, in calculate_calories
+    speed_kph = distance_km / (duration_minutes / 60)
+ZeroDivisionError: float division by zero
+2024-11-24 19:06:27,894 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 19:06:27,896 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:06:31,056 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 19:06:35,013 - walkingpad - [ERROR] - exercise:38 - Unexpected error ending session: float division by zero
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\controllers\exercise.py", line 30, in end_session
+    session = await exercise_service.end_session()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\exercise.py", line 152, in end_session
+    calories = calculate_calories(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\utils\helpers.py", line 21, in calculate_calories
+    speed_kph = distance_km / (duration_minutes / 60)
+ZeroDivisionError: float division by zero
+2024-11-24 19:07:28,374 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 19:07:28,375 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:07:31,545 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 19:07:35,455 - walkingpad - [DEBUG] - exercise:81 - Executing insert with params: (1, datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))
+2024-11-24 19:07:35,622 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO exercise_sessions 
+                (
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+                )
+                VALUES 
+                (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING 
+                    id, 
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+            
+2024-11-24 19:07:35,623 - walkingpad - [DEBUG] - database:30 - With parameters: (1, datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))
+2024-11-24 19:07:35,689 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 7), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:07:35,721 - walkingpad - [DEBUG] - exercise:88 - Insert result: [RealDictRow([('id', 7), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:07:35,722 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 7), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:07:35,723 - walkingpad - [INFO] - exercise:92 - Started new session: 7
+2024-11-24 19:07:55,110 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:07:55,293 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:07:55,294 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:07:55,568 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:07:55,569 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:07:55,634 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:07:55,665 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:07:55,846 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:07:56,032 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:07:56,036 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:07:56,042 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:07:56,043 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:08:50,737 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:08:50,905 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:08:50,905 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:08:51,196 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:08:51,196 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:08:51,262 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:08:51,293 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:08:51,476 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:08:51,654 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:08:51,657 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:08:51,664 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:08:51,665 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:09:09,681 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:09,847 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:09:09,847 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:09:10,107 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:09:10,107 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:09:10,171 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:09:10,203 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:09:10,376 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:10,570 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:10,572 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:09:10,579 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:09:10,579 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:09:14,321 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:14,507 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO users (id, first_name, last_name, email, height_cm, weight_kg, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (id) DO NOTHING
+            
+2024-11-24 19:09:14,507 - walkingpad - [DEBUG] - database:30 - With parameters: (1, 'John', 'Doe', 'john.doe@example.com', 180, 80)
+2024-11-24 19:09:14,765 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT id FROM users WHERE id = 1
+2024-11-24 19:09:14,766 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:09:14,829 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 1)])]
+2024-11-24 19:09:14,861 - walkingpad - [INFO] - database:66 - Database initialized with default user
+2024-11-24 19:09:15,054 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:15,231 - walkingpad - [INFO] - database:19 - Database connection established
+2024-11-24 19:09:15,234 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
+2024-11-24 19:09:15,239 - walkingpad - [INFO] - app:29 - Application initialized successfully
+2024-11-24 19:09:15,240 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 19:09:20,213 - walkingpad - [INFO] - exercise:107 - Attempting to end exercise session
+2024-11-24 19:09:20,385 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                SELECT * FROM exercise_sessions 
+                WHERE end_time IS NULL 
+                ORDER BY start_time DESC 
+                LIMIT 1
+            
+2024-11-24 19:09:20,386 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-24 19:09:20,449 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 7), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:09:20,481 - walkingpad - [INFO] - exercise:120 - Found active session in database
+2024-11-24 19:09:20,481 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 7), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 18, 7, 35, 454641, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:09:20,481 - walkingpad - [INFO] - exercise:126 - Attempting to end exercise session
+2024-11-24 19:09:20,482 - walkingpad - [DEBUG] - exercise:133 - Stopping walking pad device
+2024-11-24 19:09:20,482 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 19:09:20,482 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:09:23,444 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 19:09:27,330 - walkingpad - [DEBUG] - exercise:136 - Getting device status
+2024-11-24 19:09:27,330 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:09:29,870 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 19:09:34,467 - walkingpad - [DEBUG] - exercise:138 - Device status received: {'mode': 'manual', 'belt_state': 'idle', 'distance': 0.0, 'time': 0, 'steps': 0, 'speed': 0.0}
+2024-11-24 19:09:34,632 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT weight_kg FROM users WHERE id = %s
+2024-11-24 19:09:34,633 - walkingpad - [DEBUG] - database:30 - With parameters: (1,)
+2024-11-24 19:09:34,696 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('weight_kg', 89.1)])]
+2024-11-24 19:09:34,727 - walkingpad - [DEBUG] - exercise:194 - Executing update query with params: (datetime.datetime(2024, 11, 24, 18, 9, 34, 727129, tzinfo=datetime.timezone.utc), 0, 0, 0, 0.0, 0.0, datetime.datetime(2024, 11, 24, 18, 9, 34, 727129, tzinfo=datetime.timezone.utc), 7)
+2024-11-24 19:09:34,908 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                       UPDATE exercise_sessions 
+                       SET 
+                           end_time = %s,
+                           steps = %s,
+                           distance_km = %s,
+                           duration_seconds = %s,
+                           calories = %s,
+                           average_speed = %s,
+                           updated_at = %s
+                       WHERE id = %s
+                       RETURNING *
+                   
+2024-11-24 19:09:34,909 - walkingpad - [DEBUG] - database:30 - With parameters: (datetime.datetime(2024, 11, 24, 18, 9, 34, 727129, tzinfo=datetime.timezone.utc), 0, 0, 0, 0.0, 0.0, datetime.datetime(2024, 11, 24, 18, 9, 34, 727129, tzinfo=datetime.timezone.utc), 7)
+2024-11-24 19:09:35,004 - walkingpad - [ERROR] - database:45 - Database error: column "updated_at" of relation "exercise_sessions" does not exist
+LINE 10:                            updated_at = '2024-11-24T18:09:34...
+                                    ^
+
+2024-11-24 19:09:35,005 - walkingpad - [ERROR] - exercise:210 - Error ending session: column "updated_at" of relation "exercise_sessions" does not exist
+LINE 10:                            updated_at = '2024-11-24T18:09:34...
+                                    ^
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\exercise.py", line 195, in end_session
+    result = self.db.execute_query(update_query, update_params)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\database.py", line 31, in execute_query
+    cur.execute(query, params)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: column "updated_at" of relation "exercise_sessions" does not exist
+LINE 10:                            updated_at = '2024-11-24T18:09:34...
+                                    ^
+
+2024-11-24 19:09:35,006 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 19:09:35,006 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:09:38,230 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 19:09:42,129 - walkingpad - [ERROR] - exercise:42 - Unexpected error ending session: column "updated_at" of relation "exercise_sessions" does not exist
+LINE 10:                            updated_at = '2024-11-24T18:09:34...
+                                    ^
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\controllers\exercise.py", line 30, in end_exercise
+    session = await exercise_service.end_session()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\exercise.py", line 195, in end_session
+    result = self.db.execute_query(update_query, update_params)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\database.py", line 31, in execute_query
+    cur.execute(query, params)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: column "updated_at" of relation "exercise_sessions" does not exist
+LINE 10:                            updated_at = '2024-11-24T18:09:34...
+                                    ^
+
+2024-11-24 19:10:48,148 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 19:10:48,149 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:10:51,151 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 19:10:55,045 - walkingpad - [DEBUG] - exercise:81 - Executing insert with params: (1, datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc))
+2024-11-24 19:10:55,213 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO exercise_sessions 
+                (
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+                )
+                VALUES 
+                (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING 
+                    id, 
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+            
+2024-11-24 19:10:55,214 - walkingpad - [DEBUG] - database:30 - With parameters: (1, datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc))
+2024-11-24 19:10:55,279 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:10:55,310 - walkingpad - [DEBUG] - exercise:88 - Insert result: [RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:10:55,311 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:10:55,311 - walkingpad - [INFO] - exercise:92 - Started new session: 8
+2024-11-24 19:10:58,793 - walkingpad - [INFO] - exercise:107 - Attempting to end exercise session
+2024-11-24 19:10:58,794 - walkingpad - [INFO] - exercise:126 - Attempting to end exercise session
+2024-11-24 19:10:58,794 - walkingpad - [DEBUG] - exercise:133 - Stopping walking pad device
+2024-11-24 19:10:58,794 - walkingpad - [INFO] - device:71 - Stopping walking pad
+2024-11-24 19:10:58,795 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:11:02,031 - walkingpad - [INFO] - device:77 - Walking pad stopped successfully
+2024-11-24 19:11:05,931 - walkingpad - [DEBUG] - exercise:136 - Getting device status
+2024-11-24 19:11:06,027 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:11:08,614 - walkingpad - [INFO] - device:166 - [service device] - after connect
+2024-11-24 19:11:13,204 - walkingpad - [DEBUG] - exercise:138 - Device status received: {'mode': 'manual', 'belt_state': 'idle', 'distance': 0.0, 'time': 0, 'steps': 0, 'speed': 0.0}
+2024-11-24 19:11:13,384 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT weight_kg FROM users WHERE id = %s
+2024-11-24 19:11:13,385 - walkingpad - [DEBUG] - database:30 - With parameters: (1,)
+2024-11-24 19:11:13,449 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('weight_kg', 89.1)])]
+2024-11-24 19:11:13,479 - walkingpad - [DEBUG] - exercise:194 - Executing update query with params: (datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc), 0, 0, 0, 0.0, 0.0, datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc), 8)
+2024-11-24 19:11:13,659 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                       UPDATE exercise_sessions 
+                       SET 
+                           end_time = %s,
+                           steps = %s,
+                           distance_km = %s,
+                           duration_seconds = %s,
+                           calories = %s,
+                           average_speed = %s,
+                           updated_at = %s
+                       WHERE id = %s
+                       RETURNING *
+                   
+2024-11-24 19:11:13,659 - walkingpad - [DEBUG] - database:30 - With parameters: (datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc), 0, 0, 0, 0.0, 0.0, datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc), 8)
+2024-11-24 19:11:13,724 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('end_time', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc)), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:11:13,755 - walkingpad - [DEBUG] - exercise:201 - Update query result: [RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('end_time', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc)), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:11:13,756 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 8), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('end_time', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc)), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 18, 10, 55, 45584, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 18, 11, 13, 479784, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:11:13,756 - walkingpad - [INFO] - exercise:205 - Successfully ended session 8
+2024-11-24 19:11:36,024 - walkingpad - [INFO] - device:45 - Starting walking pad with initial speed: None
+2024-11-24 19:11:36,025 - walkingpad - [INFO] - device:151 - [try to connect]
+2024-11-24 19:11:38,832 - walkingpad - [INFO] - device:60 - Walking pad started successfully
+2024-11-24 19:11:42,727 - walkingpad - [DEBUG] - exercise:81 - Executing insert with params: (1, datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc))
+2024-11-24 19:11:42,903 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                INSERT INTO exercise_sessions 
+                (
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+                )
+                VALUES 
+                (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING 
+                    id, 
+                    user_id, 
+                    start_time, 
+                    mode, 
+                    steps, 
+                    distance_km, 
+                    duration_seconds, 
+                    calories, 
+                    average_speed,
+                    created_at
+            
+2024-11-24 19:11:42,903 - walkingpad - [DEBUG] - database:30 - With parameters: (1, datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc), 'manual', 0, 0.0, 0, 0, 0.0, datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc))
+2024-11-24 19:11:42,970 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 9), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:11:43,001 - walkingpad - [DEBUG] - exercise:88 - Insert result: [RealDictRow([('id', 9), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc))])]
+2024-11-24 19:11:43,003 - walkingpad - [DEBUG] - exercise:65 - Creating ExerciseSession from row: RealDictRow([('id', 9), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc)), ('mode', 'manual'), ('steps', 0), ('distance_km', 0.0), ('duration_seconds', 0), ('calories', 0), ('average_speed', 0.0), ('created_at', datetime.datetime(2024, 11, 24, 18, 11, 42, 727053, tzinfo=datetime.timezone.utc))])
+2024-11-24 19:11:43,003 - walkingpad - [INFO] - exercise:92 - Started new session: 9

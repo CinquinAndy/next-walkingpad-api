@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 from api.services.exercise import exercise_service
 from api.models.exercise import ExerciseSession, SessionData
+from api.utils.logger import logger
 
 bp = Blueprint('exercise', __name__)
 
@@ -23,16 +24,26 @@ async def start_session():
 
 
 @bp.route('/end', methods=['POST'])
-async def end_session():
-    """End current exercise session"""
+async def end_exercise():
+    """End the current exercise session"""
     try:
         session = await exercise_service.end_session()
         return jsonify({
-            'message': 'Session ended successfully',
-            'data': session.to_dict()
+            'status': 'success',
+            'message': 'Exercise session ended successfully',
+            'session': session.to_dict()
         })
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Unexpected error ending session: {e}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'An unexpected error occurred while ending the session'
+        }), 500
 
 
 @bp.route('/current', methods=['GET'])

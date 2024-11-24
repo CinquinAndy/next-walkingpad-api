@@ -104,63 +104,114 @@ class ExerciseService:
 
     async def end_session(self) -> ExerciseSession:
         """End current exercise session"""
+        logger.info("Attempting to end exercise session")
+
         if not self.current_session:
+            # Try to find the last active session
+            query = """
+                SELECT * FROM exercise_sessions 
+                WHERE end_time IS NULL 
+                ORDER BY start_time DESC 
+                LIMIT 1
+            """
+            result = self.db.execute_query(query)
+
+            if result:
+                logger.info("Found active session in database")
+                self.current_session = ExerciseSession.from_db_row(result[0])
+            else:
+                logger.error("No active session found in memory or database")
+                raise ValueError("No active exercise session found. Please start a session first.")
+        """End current exercise session"""
+        logger.info("Attempting to end exercise session")
+
+        if not self.current_session:
+            logger.error("No active session found")
             raise ValueError("No active session")
 
         try:
-            # Get final stats
-            stats = await self.device.get_status()
+            logger.debug("Stopping walking pad device")
+            await self.device.stop_walking()
 
-            # Calculate calories
-            user_settings = await self.db.execute_query(
+            logger.debug("Getting device status")
+            status = await self.device.get_status()
+            logger.debug(f"Device status received: {status}")
+
+            # Get device metrics with fallbacks to 0
+            time_elapsed = getattr(status, 'time', 0)
+            distance = getattr(status, 'dist', 0)
+            steps = getattr(status, 'steps', 0)
+
+            # Calculate duration and average speed
+            duration_minutes = time_elapsed / 60 if time_elapsed else 0
+            average_speed = 0.0
+            if time_elapsed > 0:
+                average_speed = (distance / (time_elapsed / 3600))
+
+            # Get user weight
+            user_weight = 70  # default weight
+            user_result = self.db.execute_query(
                 "SELECT weight_kg FROM users WHERE id = %s",
                 (self.current_session.user_id,)
             )
-            weight_kg = user_settings[0]['weight_kg'] if user_settings else None
+            if user_result:
+                user_weight = user_result[0]['weight_kg']
 
+            # Calculate calories
             calories = calculate_calories(
-                stats['distance'],
-                stats['time'] / 60,  # Convert to minutes
-                weight_kg
+                distance_km=distance,
+                duration_minutes=duration_minutes,
+                weight_kg=user_weight
             )
 
-            # Update session record
-            query = """
-                UPDATE exercise_sessions 
-                SET end_time = %s,
-                    duration_seconds = %s,
-                    distance_km = %s,
-                    steps = %s,
-                    calories = %s,
-                    average_speed = %s
-                WHERE id = %s
-                RETURNING *
-            """
-            params = (
-                datetime.now(timezone.utc),
-                stats['time'],
-                stats['distance'],
-                stats['steps'],
+            current_time = datetime.now(timezone.utc)
+
+            update_query = """
+                       UPDATE exercise_sessions 
+                       SET 
+                           end_time = %s,
+                           steps = %s,
+                           distance_km = %s,
+                           duration_seconds = %s,
+                           calories = %s,
+                           average_speed = %s,
+                           updated_at = %s
+                       WHERE id = %s
+                       RETURNING *
+                   """
+
+            update_params = (
+                current_time,
+                steps,
+                distance,
+                time_elapsed,
                 calories,
-                stats['speed']
+                average_speed,
+                current_time,
+                self.current_session.id
             )
 
-            result = self.db.execute_query(
-                query,
-                params + (self.current_session.id,)
-            )
+            logger.debug(f"Executing update query with params: {update_params}")
+            result = self.db.execute_query(update_query, update_params)
 
-            # Stop device
-            await self.device.stop_walking()
+            if not result:
+                logger.error("Update query returned no results")
+                raise Exception("Failed to update exercise session")
 
-            session = ExerciseSession(**result[0])
+            logger.debug(f"Update query result: {result}")
+            updated_session = ExerciseSession.from_db_row(result[0])
+
             self.current_session = None
+            logger.info(f"Successfully ended session {updated_session.id}")
 
-            logger.info(f"Ended session {session.id}")
-            return session
+            return updated_session
 
         except Exception as e:
-            logger.error(f"Failed to end session: {e}")
+            logger.error(f"Error ending session: {str(e)}", exc_info=True)
+            try:
+                await self.device.stop_walking()
+            except Exception as stop_error:
+                logger.error(f"Failed to stop device during error handling: {stop_error}")
             raise
 
     async def get_session(self, session_id: int) -> Optional[ExerciseSession]:

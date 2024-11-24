@@ -27,18 +27,33 @@ class SessionData:
 
 @dataclass
 class ExerciseSession:
-    """Exercise session model"""
-    user_id: int
-    start_time: datetime
-    mode: str
-    steps: int = 0
-    distance_km: float = 0
-    duration_seconds: int = 0
-    calories: int = 0
-    id: Optional[int] = None
-    end_time: Optional[datetime] = None
-    average_speed: Optional[float] = 0
-    created_at: Optional[datetime] = None
+    def __init__(
+        self,
+        id: int,
+        user_id: int,
+        start_time: datetime,
+        mode: str,
+        steps: int = 0,
+        distance_km: float = 0.0,
+        duration_seconds: int = 0,
+        calories: int = 0,
+        average_speed: float = 0.0,
+        end_time: datetime = None,
+        created_at: datetime = None,
+        updated_at: datetime = None
+    ):
+        self.id = id
+        self.user_id = user_id
+        self.start_time = start_time
+        self.end_time = end_time
+        self.mode = mode
+        self.steps = steps
+        self.distance_km = distance_km
+        self.duration_seconds = duration_seconds
+        self.calories = calories
+        self.average_speed = average_speed
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     @classmethod
     def from_db_row(cls, row: dict):

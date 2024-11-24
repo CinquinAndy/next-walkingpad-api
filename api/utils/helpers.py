@@ -5,32 +5,26 @@ from datetime import datetime, date
 from typing import Optional
 
 
-def calculate_calories(
-        distance_km: float,
-        duration_minutes: float,
-        weight_kg: Optional[float] = None
-) -> int:
-    """
-    Calculate calories burned based on distance and duration
-    Uses MET (Metabolic Equivalent) formula
-    """
-    # Default weight if not provided (70kg)
-    weight = weight_kg or 70
+def calculate_calories(distance_km: float, duration_minutes: float, weight_kg: float) -> float:
+    """Calculate calories burned during exercise"""
+    if duration_minutes <= 0 or distance_km <= 0:
+        return 0.0
 
-    # Walking MET values based on speed
-    speed_kph = distance_km / (duration_minutes / 60)
-    if speed_kph < 3.2:
-        met = 2.0  # Slow walking
-    elif speed_kph < 4.8:
-        met = 3.0  # Moderate walking
-    elif speed_kph < 6.4:
-        met = 3.5  # Brisk walking
-    else:
-        met = 4.3  # Very brisk walking
+    try:
+        speed_kph = distance_km / (duration_minutes / 60)
+        # MET value for walking based on speed
+        if speed_kph < 4:
+            met = 2.0
+        elif speed_kph < 6:
+            met = 3.5
+        else:
+            met = 5.0
 
-    # Calories = MET × Weight (kg) × Duration (hours)
-    calories = met * weight * (duration_minutes / 60)
-    return round(calories)
+        # Calories = MET × weight (kg) × duration (hours)
+        calories = met * weight_kg * (duration_minutes / 60)
+        return round(calories, 2)
+    except ZeroDivisionError:
+        return 0.0
 
 
 def format_duration(seconds: int) -> str:
