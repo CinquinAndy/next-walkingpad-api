@@ -60,15 +60,26 @@ class ExerciseService:
         }
 
     async def start_session(self) -> ExerciseSession:
-        """Start a new exercise session"""
+        """
+        Start a new exercise session after verifying and cleaning device state
+
+        Returns:
+            ExerciseSession: The newly created session
+
+        Raises:
+            ValueError: If device state is not clean or ready
+            Exception: For other errors during session start
+        """
         try:
-            # New security check
-            is_safe, error_message = await self.security.check_session_safety()
-            if not is_safe:
+            # Verify and clean device state before starting
+            is_ready, error_message = await self.security.check_and_clean_state()
+            if not is_ready:
                 raise ValueError(error_message)
 
-            await self.device.start_walking()
+            logger.info("Device state verified and ready for new session")
 
+            # Continue with existing session start code...
+            await self.device.start_walking()
             current_time = datetime.now(timezone.utc)
 
             # Insert into database

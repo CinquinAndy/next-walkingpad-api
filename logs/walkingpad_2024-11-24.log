@@ -3303,3 +3303,90 @@ TypeError: DeviceSettings.__init__() got an unexpected keyword argument 'id'
 2024-11-24 23:58:52,001 - walkingpad - [INFO] - __init__:8 - [controllers __init__] - Registering blueprints
 2024-11-24 23:58:52,010 - walkingpad - [INFO] - app:29 - Application initialized successfully
 2024-11-24 23:58:52,013 - walkingpad - [INFO] - app:44 - Starting server on 0.0.0.0:5678 (debug=True)
+2024-11-24 23:59:37,460 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-24 23:59:39,798 - walkingpad - [INFO] - device:168 - [service device] - after connect
+2024-11-24 23:59:44,403 - walkingpad - [WARNING] - security:29 - Attempted to start session while belt was moving
+2024-11-24 23:59:44,403 - walkingpad - [ERROR] - exercise:134 - Failed to start session: Walking pad must be stopped before starting a new session
+2024-11-24 23:59:44,404 - walkingpad - [INFO] - device:73 - Stopping walking pad
+2024-11-24 23:59:44,404 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-24 23:59:47,899 - walkingpad - [INFO] - device:79 - Walking pad stopped successfully
+2024-11-24 23:59:57,499 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-24 23:59:59,888 - walkingpad - [INFO] - device:168 - [service device] - after connect
+2024-11-25 00:00:04,659 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                SELECT id, start_time 
+                FROM exercise_sessions 
+                WHERE end_time IS NULL
+                ORDER BY start_time DESC
+            
+2024-11-25 00:00:04,660 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-25 00:00:04,725 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 17), ('start_time', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc))]), RealDictRow([('id', 16), ('start_time', datetime.datetime(2024, 11, 24, 21, 57, 22, 338806, tzinfo=datetime.timezone.utc))]), RealDictRow([('id', 15), ('start_time', datetime.datetime(2024, 11, 24, 21, 56, 53, 551714, tzinfo=datetime.timezone.utc))]), RealDictRow([('id', 13), ('start_time', datetime.datetime(2024, 11, 24, 21, 56, 7, 323497, tzinfo=datetime.timezone.utc))]), RealDictRow([('id', 12), ('start_time', datetime.datetime(2024, 11, 24, 21, 55, 50, 194367, tzinfo=datetime.timezone.utc))])]
+2024-11-25 00:00:04,760 - walkingpad - [WARNING] - security:35 - Found 5 incomplete sessions
+2024-11-25 00:00:04,761 - walkingpad - [ERROR] - exercise:134 - Failed to start session: There are incomplete sessions. Please end the current session first.
+2024-11-25 00:00:04,762 - walkingpad - [INFO] - device:73 - Stopping walking pad
+2024-11-25 00:00:04,762 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-25 00:00:07,688 - walkingpad - [INFO] - device:79 - Walking pad stopped successfully
+2024-11-25 00:00:22,766 - walkingpad - [INFO] - exercise:144 - Attempting to end exercise session
+2024-11-25 00:00:22,939 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                    SELECT * FROM exercise_sessions 
+                    WHERE end_time IS NULL 
+                    ORDER BY start_time DESC 
+                    LIMIT 1
+                
+2024-11-25 00:00:22,940 - walkingpad - [DEBUG] - database:30 - With parameters: None
+2024-11-25 00:00:23,008 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 17), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 372777, tzinfo=datetime.timezone.utc))])]
+2024-11-25 00:00:23,041 - walkingpad - [INFO] - exercise:157 - Found active session in database
+2024-11-25 00:00:23,041 - walkingpad - [DEBUG] - exercise:51 - Creating ExerciseSession from row: RealDictRow([('id', 17), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('end_time', None), ('duration_seconds', 0), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 372777, tzinfo=datetime.timezone.utc))])
+2024-11-25 00:00:23,042 - walkingpad - [DEBUG] - exercise:163 - Getting final device metrics
+2024-11-25 00:00:23,042 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-25 00:00:25,296 - walkingpad - [INFO] - device:168 - [service device] - after connect
+2024-11-25 00:00:29,890 - walkingpad - [DEBUG] - exercise:167 - Stopping walking pad
+2024-11-25 00:00:29,890 - walkingpad - [INFO] - device:73 - Stopping walking pad
+2024-11-25 00:00:29,890 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-25 00:00:33,256 - walkingpad - [INFO] - device:79 - Walking pad stopped successfully
+2024-11-25 00:00:37,331 - walkingpad - [DEBUG] - database:29 - Executing query: SELECT weight_kg FROM users WHERE id = %s
+2024-11-25 00:00:37,331 - walkingpad - [DEBUG] - database:30 - With parameters: (1,)
+2024-11-25 00:00:37,395 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('weight_kg', 89.1)])]
+2024-11-25 00:00:37,425 - walkingpad - [DEBUG] - exercise:219 - Updating session with metrics: {'distance_km': 0.0, 'duration_seconds': 0, 'steps': 0, 'speed': 0.0}
+2024-11-25 00:00:37,592 - walkingpad - [DEBUG] - database:29 - Executing query: 
+                UPDATE exercise_sessions 
+                SET 
+                    end_time = %s,
+                    steps = %s,
+                    distance_km = %s,
+                    duration_seconds = %s,
+                    calories = %s,
+                    average_speed = %s,
+                    updated_at = %s
+                WHERE id = %s
+                RETURNING *
+            
+2024-11-25 00:00:37,594 - walkingpad - [DEBUG] - database:30 - With parameters: (datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc), 0, 0.0, 2121, 0.0, 0.0, datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc), 17)
+2024-11-25 00:00:37,658 - walkingpad - [DEBUG] - database:35 - Query result: [RealDictRow([('id', 17), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('end_time', datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc)), ('duration_seconds', 2121), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc))])]
+2024-11-25 00:00:37,691 - walkingpad - [DEBUG] - exercise:51 - Creating ExerciseSession from row: RealDictRow([('id', 17), ('user_id', 1), ('start_time', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('end_time', datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc)), ('duration_seconds', 2121), ('distance_km', 0.0), ('steps', 0), ('calories', 0), ('average_speed', 0.0), ('max_speed', None), ('mode', 'manual'), ('created_at', datetime.datetime(2024, 11, 24, 22, 25, 15, 196987, tzinfo=datetime.timezone.utc)), ('updated_at', datetime.datetime(2024, 11, 24, 23, 0, 37, 161215, tzinfo=datetime.timezone.utc))])
+2024-11-25 00:00:37,692 - walkingpad - [INFO] - exercise:229 - Successfully ended session 17 with metrics: distance=0.0km, steps=0, duration=2121s
+2024-11-25 00:00:46,202 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-25 00:00:47,485 - walkingpad - [ERROR] - security:47 - Session safety check failed: Could not get GATT services: Unreachable
+Traceback (most recent call last):
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\security.py", line 27, in check_session_safety
+    device_status = await self.device.get_status()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 167, in get_status
+    await self.connect()
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\api\services\device.py", line 156, in connect
+    await self.controller.run(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 411, in run
+    await self.connect(address)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\ph4_walkingpad\pad.py", line 331, in connect
+    return await self.client.connect(timeout=10.0, **kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\__init__.py", line 615, in connect
+    return await self._backend.connect(**kwargs)
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\backends\winrt\client.py", line 487, in connect
+    self.services = await self.get_services(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\backends\winrt\client.py", line 719, in get_services
+    services = _ensure_success(
+  File "C:\Users\andyq\Documents\clonedRepo\walkingpad\env\lib\site-packages\bleak\backends\winrt\client.py", line 168, in _ensure_success
+    raise BleakError(f"{fail_msg}: Unreachable")
+bleak.exc.BleakError: Could not get GATT services: Unreachable
+2024-11-25 00:00:47,486 - walkingpad - [ERROR] - exercise:134 - Failed to start session: Safety check failed: Could not get GATT services: Unreachable
+2024-11-25 00:00:47,486 - walkingpad - [INFO] - device:73 - Stopping walking pad
+2024-11-25 00:00:47,488 - walkingpad - [INFO] - device:153 - [try to connect]
+2024-11-25 00:00:54,530 - walkingpad - [INFO] - device:79 - Walking pad stopped successfully
