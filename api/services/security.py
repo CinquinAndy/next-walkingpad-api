@@ -1,5 +1,5 @@
 """
-Exercise security service with improved session handling
+Optimized exercise security service with minimal device connections
 """
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple, Dict
@@ -17,47 +17,65 @@ class ExerciseSecurityService:
 
     async def check_and_clean_state(self) -> Tuple[bool, Optional[str]]:
         """
-        Check device state and clean if necessary.
-        Now handles incomplete sessions without blocking new ones.
+        Optimized state check and cleanup with minimal device connections.
+        Handles all device operations in a single connection session.
         """
         try:
-            # 1. Check current device state
-            current_status = await self.device.get_status()
-            self.logger.info(f"Current device status: {current_status}")
-
-            # 2. Force stop if device is still running
-            if current_status.get('belt_state') not in ['idle', 'standby']:
-                await self.device.stop_walking()
-                self.logger.info("Force stopped the walking pad")
-                await asyncio.sleep(self.device.minimal_cmd_space)
-
-            # 3. Handle any incomplete sessions in background
+            # 1. Handle any incomplete sessions in background (db only, no device connection)
             incomplete_sessions = await self._check_incomplete_sessions()
             if incomplete_sessions:
-                # Auto-close old sessions but continue with new session
                 await self._cleanup_incomplete_sessions(incomplete_sessions)
                 self.logger.info(f"Auto-closed {len(incomplete_sessions)} old incomplete sessions")
 
-            # 4. Check device memory for unsaved data
-            last_stats = await self._get_last_device_stats()
-            self.logger.info(f"Retrieved last device stats: {last_stats}")
+            # 2. Single device connection for all operations
+            try:
+                await self.device.connect()
 
-            if last_stats and self._has_significant_data(last_stats):
-                return False, "Unsaved session data found. Please check history and confirm before starting new session."
+                # Get initial status
+                await self.device.controller.ask_stats()
+                await asyncio.sleep(self.device.minimal_cmd_space)
+                initial_stats = self.device.controller.last_status
 
-            # 5. Reset device state
-            await self._reset_device_state()
+                # Check for significant data
+                if initial_stats and self._has_significant_data({
+                    'distance': initial_stats.dist / 100,
+                    'steps': initial_stats.steps,
+                    'time': initial_stats.time
+                }):
+                    self.logger.warning("Found unsaved data in device memory")
+                    return False, "Unsaved session data found. Please check history first."
 
-            return True, None
+                # Set to manual mode and prepare for operation
+                await self.device.controller.switch_mode(1)  # Set to manual
+                await asyncio.sleep(self.device.minimal_cmd_space)
+
+                # Final status check
+                await self.device.controller.ask_stats()
+                await asyncio.sleep(self.device.minimal_cmd_space)
+
+                self.logger.info("Device prepared and ready for new session")
+                return True, None
+
+            except Exception as e:
+                self.logger.error(f"Device communication error: {e}")
+                return False, f"Device communication failed: {str(e)}"
+            finally:
+                await self.device.disconnect()
 
         except Exception as e:
-            self.logger.error(f"State check and cleanup failed: {e}", exc_info=True)
-            return False, f"State cleanup failed: {str(e)}"
+            self.logger.error(f"State check failed: {e}", exc_info=True)
+            return False, f"State check failed: {str(e)}"
+
+    def _has_significant_data(self, stats: Dict) -> bool:
+        """Check if stats represent significant activity"""
+        return any([
+            stats.get('distance', 0) > 0.05,  # More than 50m
+            stats.get('steps', 0) > 50,       # More than 50 steps
+            stats.get('time', 0) > 30         # More than 30 seconds
+        ])
 
     async def _check_incomplete_sessions(self) -> list:
-        """
-        Find old incomplete sessions (more than 3 hours old)
-        """
+        """Find old incomplete sessions (more than 3 hours old)"""
         query = """
             SELECT id, start_time 
             FROM exercise_sessions 
@@ -68,12 +86,9 @@ class ExerciseSecurityService:
         return self.db.execute_query(query)
 
     async def _cleanup_incomplete_sessions(self, sessions: list):
-        """
-        Mark old sessions as ended with appropriate notes
-        """
+        """Mark old sessions as ended with appropriate notes"""
         try:
             for session in sessions:
-                # Calculate a reasonable end time (30 minutes after start or current time)
                 start_time = session['start_time']
                 estimated_end = min(
                     start_time + timedelta(minutes=30),
@@ -94,58 +109,4 @@ class ExerciseSecurityService:
 
         except Exception as e:
             self.logger.error(f"Failed to cleanup sessions: {e}")
-            # Continue execution even if cleanup fails
             self.logger.info("Continuing despite cleanup failure")
-
-    async def _get_last_device_stats(self) -> Optional[Dict]:
-        """Retrieve last session statistics from device"""
-        try:
-            await self.device.connect()
-            # Switch to manual mode (1)
-            await self.device.controller.switch_mode(1)
-            await asyncio.sleep(self.device.minimal_cmd_space)
-
-            await self.device.controller.ask_stats()
-            await asyncio.sleep(self.device.minimal_cmd_space)
-
-            stats = self.device.controller.last_status
-            if stats:
-                return {
-                    'distance': stats.dist / 100,
-                    'steps': stats.steps,
-                    'time': stats.time,
-                    'timestamp': datetime.now(timezone.utc)
-                }
-            return None
-
-        except Exception as e:
-            self.logger.error(f"Failed to get device stats: {e}")
-            return None
-        finally:
-            await self.device.disconnect()
-
-    def _has_significant_data(self, stats: Dict) -> bool:
-        """Check if stats represent significant activity"""
-        return any([
-            stats.get('distance', 0) > 0.05,  # More than 50m
-            stats.get('steps', 0) > 50,       # More than 50 steps
-            stats.get('time', 0) > 30         # More than 30 seconds
-        ])
-
-    async def _reset_device_state(self):
-        """Reset device state through mode cycling"""
-        try:
-            await self.device.connect()
-
-            # Cycle: Standby (0) -> Manual (1) -> Standby (0)
-            for mode in [1]:
-                await self.device.controller.switch_mode(mode)
-                await asyncio.sleep(self.device.minimal_cmd_space)
-
-            self.logger.info("Device state reset completed")
-
-        except Exception as e:
-            self.logger.error(f"Failed to reset device state: {e}")
-            raise
-        finally:
-            await self.device.disconnect()
