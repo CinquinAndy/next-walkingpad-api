@@ -138,7 +138,7 @@ class ExerciseSecurityService:
             await self.device.connect()
 
             # Cycle: Standby (0) -> Manual (1) -> Standby (0)
-            for mode in [0, 1, 0]:
+            for mode in [1]:
                 await self.device.controller.switch_mode(mode)
                 await asyncio.sleep(self.device.minimal_cmd_space)
 
