@@ -1,8 +1,9 @@
 """
-WalkingPad device service with optimized connection handling and status tracking
+DeviceService with automatic connection management and optimized status tracking.
 """
 import asyncio
-from typing import Dict
+from functools import wraps
+from typing import Dict, Callable, Any
 
 from ph4_walkingpad import pad
 from ph4_walkingpad.pad import WalkingPad, Controller
@@ -12,8 +13,35 @@ from api.config.config import Config
 from api.utils.logger import logger
 
 
+def ensure_connection(disconnect_after: bool = False):
+    """
+    Decorator to ensure device is connected before executing the method.
+    Will connect if needed and optionally disconnect after.
+
+    Args:
+        disconnect_after: Whether to disconnect after method execution
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(self, *args, **kwargs) -> Any:
+            was_connected = self.is_connected
+
+            if not was_connected:
+                await self.connect()
+
+            try:
+                result = await func(self, *args, **kwargs)
+                return result
+            finally:
+                if not was_connected or disconnect_after:
+                    await self.disconnect()
+
+        return wrapper
+    return decorator
+
+
 class DeviceService:
-    """Service for interacting with WalkingPad device"""
+    """Service for interacting with WalkingPad device with optimized connection handling"""
 
     def __init__(self):
         """Initialize the device service"""
@@ -23,7 +51,6 @@ class DeviceService:
         self.minimal_cmd_space = Config.MINIMAL_CMD_SPACE
         self.is_connected = False
 
-        # Enhanced status tracking
         self._last_status = {
             "mode": None,
             "belt_state": None,
@@ -36,11 +63,7 @@ class DeviceService:
         self.controller.handler_last_status = self._on_new_status
 
     def _on_new_status(self, sender, record):
-        """
-        Handle new status updates from device.
-        Updates internal status cache with latest values.
-        """
-        # Update internal status cache with converted values
+        """Update internal status cache with latest device values"""
         self._last_status.update({
             "mode": self._get_mode_string(record.manual_mode),
             "belt_state": self._get_belt_state_string(record.belt_state),
@@ -54,35 +77,49 @@ class DeviceService:
                     f"Steps: {self._last_status['steps']}, "
                     f"Time: {self._last_status['time']} seconds")
 
+    @ensure_connection(disconnect_after=False)
     async def get_fast_status(self) -> Dict:
+        """Get current device status using existing connection"""
+        await self.controller.ask_stats()
+        await asyncio.sleep(self.minimal_cmd_space)
+        return self._last_status.copy()
+
+    @ensure_connection(disconnect_after=False)
+    async def get_status(self) -> Dict:
         """
-        Get current device status without reconnecting.
-        Must be used only when device is already connected.
+        Get current device status using the device connection.
+        Connection is managed automatically by the ensure_connection decorator.
 
         Returns:
-            Dict: Current device status
+            Dict: Current device status with:
+                - mode: Current operation mode (manual/auto/standby)
+                - belt_state: Current belt state (idle/running/standby)
+                - speed: Current speed in km/h
+                - distance: Distance covered in km
+                - steps: Number of steps
+                - time: Time in seconds
 
         Raises:
-            RuntimeError: If device is not connected
+            Exception: If communication with device fails
         """
-        if not self.is_connected:
-            raise RuntimeError("Device must be connected to use fast status")
-
+        logger.debug("Getting device status")
         try:
+            # Request new stats from device
             await self.controller.ask_stats()
             await asyncio.sleep(self.minimal_cmd_space)
-            return self._last_status.copy()
-        except Exception as e:
-            logger.error(f"Fast status check failed: {e}")
-            raise
 
+            # Return copy of cached status to prevent external modifications
+            return self._last_status.copy()
+
+        except Exception as e:
+            logger.error(f"Failed to get device status: {e}")
+            raise RuntimeError("Failed to read device status") from e
+
+    @ensure_connection(disconnect_after=False)
     async def start_walking(self, initial_speed: int = None):
-        """Start the walking pad"""
+        """Start the walking pad with optional initial speed"""
         logger.info(f"Starting walking pad with initial speed: {initial_speed}")
         try:
-            if not self.is_connected:
-                await self.connect()
-
             if initial_speed is not None:
                 device_speed = initial_speed * 10
                 await self.controller.change_speed(device_speed)
@@ -93,33 +130,21 @@ class DeviceService:
 
             logger.info("Walking pad started successfully")
             return {"success": True, "status": "running"}
-
         except Exception as e:
             logger.error(f"Failed to start walking pad: {e}")
-            await self.disconnect()  # Disconnect only on error
             raise
 
+    @ensure_connection(disconnect_after=True)
     async def stop_walking(self):
-        """Stop the walking pad"""
+        """Stop the walking pad and disconnect"""
         logger.info("Stopping walking pad")
-        try:
-            if not self.is_connected:
-                await self.connect()
-
-            await self.controller.stop_belt()
-            await asyncio.sleep(self.minimal_cmd_space)
-
-            logger.info("Walking pad stopped successfully")
-            return {"success": True, "status": "stopped"}
-
-        except Exception as e:
-            logger.error(f"Failed to stop walking pad: {e}")
-            raise
-        finally:
-            await self.disconnect()
+        await self.controller.stop_belt()
+        await asyncio.sleep(self.minimal_cmd_space)
+        logger.info("Walking pad stopped successfully")
+        return {"success": True, "status": "stopped"}
 
     async def connect(self):
-        """Connect to the WalkingPad device"""
+        """Connect to the WalkingPad device if not already connected"""
         if not self.is_connected:
             logger.info("Connecting to device...")
             address = Config.get_device_address()
@@ -129,95 +154,89 @@ class DeviceService:
             logger.info("Device connected successfully")
 
     async def disconnect(self):
-        """Disconnect from device"""
+        """Disconnect from device if connected"""
         if self.is_connected:
             await self.controller.disconnect()
             await asyncio.sleep(self.minimal_cmd_space)
             self.is_connected = False
             logger.info("Device disconnected")
 
-    async def get_status(self):
-        """
-        Get current device status (with full connection cycle).
-        Use get_fast_status() instead if device is already connected.
-        """
+    @ensure_connection(disconnect_after=True)
+    async def set_mode(self, mode: str):
+        """Set device operation mode"""
+        logger.info(f"Setting mode to: {mode}")
         try:
-            await self.connect()
-            logger.info("Getting device status")
-            status = await self.get_fast_status()
-            return status
-        finally:
-            await self.disconnect()
+            mode_value = {
+                "manual": WalkingPad.MODE_MANUAL,
+                "auto": WalkingPad.MODE_AUTOMAT,
+                "standby": WalkingPad.MODE_STANDBY
+            }.get(mode)
 
+            if mode_value is None:
+                raise ValueError(f"Invalid mode: {mode}")
+
+            await self.controller.switch_mode(mode_value)
+            await asyncio.sleep(self.minimal_cmd_space)
+            return {"success": True, "mode": mode}
+        except Exception as e:
+            logger.error(f"Failed to set mode: {e}")
+            raise
+
+    @ensure_connection(disconnect_after=True)
+    async def set_speed(self, speed: int):
+        """Set walking pad speed"""
+        logger.info(f"Setting speed to: {speed}")
+        await self.controller.change_speed(speed)
+        await asyncio.sleep(self.minimal_cmd_space)
+        return {"success": True, "current_speed": speed}
+
+    @ensure_connection(disconnect_after=True)
     async def update_preferences(self, max_speed: float, start_speed: float,
-                                 sensitivity: int, child_lock: bool,
-                                 units_miles: bool) -> dict:
-        """
-        Update device preferences with retry mechanism
-        """
+                               sensitivity: int, child_lock: bool,
+                               units_miles: bool) -> dict:
+        """Update device preferences with retry mechanism"""
         logger.info(f"Updating device preferences: max_speed={max_speed}, "
-                    f"start_speed={start_speed}, sensitivity={sensitivity}, "
-                    f"child_lock={child_lock}, units_miles={units_miles}")
+                   f"start_speed={start_speed}, sensitivity={sensitivity}, "
+                   f"child_lock={child_lock}, units_miles={units_miles}")
 
         max_retries = 3
-        retry_delay = 2  # seconds
+        retry_delay = 2
 
-        try:
-            await self.connect()
+        preferences_to_set = [
+            ('max_speed', WalkingPad.PREFS_MAX_SPEED, int(max_speed * 10)),
+            ('start_speed', WalkingPad.PREFS_START_SPEED, int(start_speed * 10)),
+            ('sensitivity', WalkingPad.PREFS_SENSITIVITY, sensitivity),
+            ('child_lock', WalkingPad.PREFS_CHILD_LOCK, int(child_lock)),
+            ('units', WalkingPad.PREFS_UNITS, int(units_miles))
+        ]
 
-            # Set all preferences in sequence with retries
-            preferences_to_set = [
-                ('max_speed', WalkingPad.PREFS_MAX_SPEED, int(max_speed * 10)),
-                ('start_speed', WalkingPad.PREFS_START_SPEED, int(start_speed * 10)),
-                ('sensitivity', WalkingPad.PREFS_SENSITIVITY, sensitivity),
-                ('child_lock', WalkingPad.PREFS_CHILD_LOCK, int(child_lock)),
-                ('units', WalkingPad.PREFS_UNITS, int(units_miles))
-            ]
+        for pref_name, pref_key, pref_value in preferences_to_set:
+            for attempt in range(max_retries):
+                try:
+                    logger.debug(f"Setting {pref_name} to: {pref_value} (attempt {attempt + 1}/{max_retries})")
+                    await self.controller.set_pref_int(pref_key, pref_value)
+                    await asyncio.sleep(self.minimal_cmd_space)
+                    break
+                except Exception as e:
+                    logger.warning(f"Attempt {attempt + 1} failed for {pref_name}: {e}")
+                    if attempt == max_retries - 1:
+                        raise Exception(f"Failed to set {pref_name} after {max_retries} attempts")
 
-            for pref_name, pref_key, pref_value in preferences_to_set:
-                for attempt in range(max_retries):
-                    try:
-                        logger.debug(f"Setting {pref_name} to: {pref_value} (attempt {attempt + 1}/{max_retries})")
-                        await self.controller.set_pref_int(pref_key, pref_value)
-                        await asyncio.sleep(self.minimal_cmd_space)
-                        break
-                    except Exception as e:
-                        logger.warning(f"Attempt {attempt + 1} failed for {pref_name}: {e}")
-                        if attempt < max_retries - 1:
-                            # Reconnect and retry
-                            await self.disconnect()
-                            await asyncio.sleep(retry_delay)
-                            await self.connect()
-                        else:
-                            raise Exception(f"Failed to set {pref_name} after {max_retries} attempts")
-
-            logger.info("Device preferences updated successfully")
-
-            # No need to verify status immediately as it might cause connection issues
-            return {
-                'success': True,
-                'message': 'Preferences updated successfully',
-                'data': {
-                    'max_speed': max_speed,
-                    'start_speed': start_speed,
-                    'sensitivity': sensitivity,
-                    'child_lock': child_lock,
-                    'units_miles': units_miles
-                }
+        return {
+            'success': True,
+            'message': 'Preferences updated successfully',
+            'data': {
+                'max_speed': max_speed,
+                'start_speed': start_speed,
+                'sensitivity': sensitivity,
+                'child_lock': child_lock,
+                'units_miles': units_miles
             }
-
-        except Exception as e:
-            logger.error(f"Failed to update device preferences: {e}", exc_info=True)
-            raise Exception(f"Failed to update device preferences: {str(e)}")
-        finally:
-            try:
-                await self.disconnect()
-            except Exception as e:
-                logger.warning(f"Error during disconnect: {e}")
+        }
 
     @staticmethod
     def _get_mode_string(mode):
-        """Convert mode value to string"""
+        """Convert internal mode value to string"""
         if mode == WalkingPad.MODE_STANDBY:
             return "standby"
         elif mode == WalkingPad.MODE_MANUAL:
@@ -228,7 +247,7 @@ class DeviceService:
 
     @staticmethod
     def _get_belt_state_string(state):
-        """Convert belt state value to string"""
+        """Convert internal belt state to string"""
         if state == 5:
             return "standby"
         elif state == 0:
@@ -240,5 +259,5 @@ class DeviceService:
         return "unknown"
 
 
-# Create a singleton instance
+# Create singleton instance
 device_service = DeviceService()

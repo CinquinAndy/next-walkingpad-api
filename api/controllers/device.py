@@ -94,7 +94,7 @@ async def get_device_status():
     """Get device status"""
     logger.info("[controllers device] - controllers")
     try:
-        status = await device_service.get_fast_status()
+        status = await device_service.get_status()
         return jsonify(status)
     except Exception as e:
         logger.error(f"Status check failed: {e}")
