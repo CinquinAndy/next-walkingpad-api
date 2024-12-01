@@ -1,131 +1,97 @@
 """
-Connection and initialization service for WalkingPad
+Service for WalkingPad initialization and state preparation
 """
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict
 import asyncio
+
 from api.services.device import device_service
-from api.services.security import ExerciseSecurityService
-from api.services.database import DatabaseService
 from api.utils.logger import get_logger
-from ph4_walkingpad.pad import Scanner
 
 logger = get_logger()
 
-
 class InitializationService:
-    """Service handling device initialization and connection"""
+    """Service for preparing WalkingPad device state"""
 
     def __init__(self):
-        """Initialize the service"""
+        """Initialize service"""
         self.device = device_service
-        self.db = DatabaseService()
-        self.security = ExerciseSecurityService(self.db, self.device)
-        self.scanner = Scanner()
 
-    async def scan_for_device(self, timeout: int = 10) -> Optional[Dict[str, Any]]:
+    async def prepare_device(self) -> Tuple[bool, Dict]:
         """
-        Scan for WalkingPad devices
-
-        Args:
-            timeout: Scan duration in seconds
+        Prepare device for use by ensuring clean state.
 
         Returns:
-            Dict with device info or None if not found
+            Tuple[bool, Dict]: Success status and response details
         """
         try:
-            logger.info(f"Scanning for WalkingPad devices (timeout: {timeout}s)")
-            devices = await self.scanner.scan(timeout=timeout)
+            logger.info("Starting device preparation")
 
-            for device in devices:
-                device_name = device.name or "Unknown"
-                if "walkingpad" in device_name.lower():
-                    logger.info(f"Found WalkingPad: {device_name} ({device.address})")
-                    return {
-                        'name': device_name,
-                        'address': device.address,
-                        'rssi': device.rssi
-                    }
+            # 1. Connect to device
+            await self.device.connect()
 
-            logger.warning("No WalkingPad devices found")
-            return None
-
-        except Exception as e:
-            logger.error(f"Scan failed: {e}")
-            raise
-
-    async def initialize_device(self) -> Tuple[bool, Dict[str, Any]]:
-        """
-        Complete device initialization sequence
-
-        Returns:
-            Tuple[success: bool, response: Dict]
-        """
-        try:
-            # 1. Scan for device
-            device_info = await self.scan_for_device()
-            if not device_info:
-                return False, {
-                    'status': 'error',
-                    'message': 'No WalkingPad device found',
-                    'step': 'scan'
-                }
-
-            # 2. Verify and clean device state
-            logger.info("Verifying device state...")
-            is_ready, error_message = await self.security.check_and_clean_state()
-
-            if not is_ready:
-                return False, {
-                    'status': 'error',
-                    'message': error_message,
-                    'step': 'state_check',
-                    'device_info': device_info
-                }
-
-            # 3. Set initial device configuration
             try:
-                await self.device.connect()
-
-                # Set to manual mode
-                await self.device.controller.switch_mode(1)  # 1 = manual mode
-                await asyncio.sleep(self.device.minimal_cmd_space)
-
-                # Get final status
+                # 2. Get initial status
                 await self.device.controller.ask_stats()
                 await asyncio.sleep(self.device.minimal_cmd_space)
-                final_status = self.device.controller.last_status
+                initial_stats = self.device.controller.last_status
 
-            except Exception as e:
-                logger.error(f"Device configuration failed: {e}")
-                return False, {
-                    'status': 'error',
-                    'message': f'Device configuration failed: {str(e)}',
-                    'step': 'configuration',
-                    'device_info': device_info
+                if not initial_stats:
+                    return False, {
+                        'status': 'error',
+                        'message': 'Could not read device status'
+                    }
+
+                # 3. Check if device has unsaved data
+                has_significant_data = (
+                    initial_stats.dist > 5 or  # More than 5cm
+                    initial_stats.steps > 50 or # More than 50 steps
+                    initial_stats.time > 30     # More than 30 seconds
+                )
+
+                if has_significant_data:
+                    logger.warning("Found unsaved data in device memory")
+                    return False, {
+                        'status': 'error',
+                        'message': 'Device has unsaved data. Please check history first.',
+                        'data': {
+                            'distance': initial_stats.dist / 100,
+                            'steps': initial_stats.steps,
+                            'time': initial_stats.time
+                        }
+                    }
+
+                # 4. Set to manual mode and stop
+                await self.device.controller.stop_belt()
+                await asyncio.sleep(self.device.minimal_cmd_space)
+
+                await self.device.controller.switch_mode(1)  # Set to manual mode
+                await asyncio.sleep(self.device.minimal_cmd_space)
+
+                # 5. Get final status
+                await self.device.controller.ask_stats()
+                await asyncio.sleep(self.device.minimal_cmd_space)
+                final_stats = self.device.controller.last_status
+
+                return True, {
+                    'status': 'success',
+                    'message': 'Device ready for use',
+                    'device_status': {
+                        'mode': 'manual',
+                        'belt_state': self.device._get_belt_state_string(final_stats.belt_state),
+                        'speed': final_stats.speed / 10
+                    }
                 }
+
             finally:
+                # Always disconnect
                 await self.device.disconnect()
 
-            # 4. Return success response
-            return True, {
-                'status': 'success',
-                'message': 'Device initialized successfully',
-                'device_info': device_info,
-                'device_status': {
-                    'mode': 'manual',
-                    'speed': final_status.speed / 10 if final_status else 0,
-                    'ready': True
-                }
-            }
-
         except Exception as e:
-            logger.error(f"Initialization failed: {e}")
+            logger.error(f"Device preparation failed: {e}")
             return False, {
                 'status': 'error',
-                'message': str(e),
-                'step': 'unknown'
+                'message': str(e)
             }
-
 
 # Create singleton instance
 initialization_service = InitializationService()

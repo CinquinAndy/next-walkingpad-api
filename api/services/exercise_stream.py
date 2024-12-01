@@ -1,11 +1,11 @@
 """
-Exercise service handling session management and real-time data streaming.
-Provides optimized session handling with continuous data updates.
+api/services/exercise_stream.py
+Exercise streaming service optimized for real-time data collection
 """
 import asyncio
 from datetime import datetime, timezone
-from typing import Optional, Dict, AsyncGenerator
 from dataclasses import dataclass
+from typing import Optional
 
 from api.models.exercise import ExerciseSession
 from api.services.database import DatabaseService
@@ -15,45 +15,39 @@ from api.utils.logger import get_logger
 
 logger = get_logger()
 
-
 @dataclass
-class SessionMetrics:
-    """Real-time session metrics data structure"""
-    distance_km: float  # Distance covered in kilometers
-    steps: int  # Total steps taken
-    duration_seconds: int  # Total session duration in seconds
-    speed: float  # Current speed in km/h
-    calories: Optional[int] = None  # Estimated calories burned (calculated at end)
-
+class StreamMetrics:
+    """Real-time session metrics"""
+    distance_km: float
+    steps: int
+    duration_seconds: int
+    speed: float
+    calories: Optional[int] = None
+    belt_state: Optional[str] = None
 
 class ExerciseStreamService:
-    """
-    Service for managing exercise sessions with real-time data streaming.
-    Handles continuous data updates and session management.
-    """
+    """Service for managing exercise sessions with optimized streaming"""
 
     def __init__(self):
-        """Initialize the exercise streaming service"""
+        """Initialize streaming service"""
         self.db = DatabaseService()
         self.device = device_service
         self.current_session: Optional[ExerciseSession] = None
         self._session_active = False
-        self._metrics_update_interval = 1.0  # Update interval in seconds
-        self._last_metrics: Optional[SessionMetrics] = None
+        self._metrics_update_interval = 1.0  # seconds
+        self._last_metrics: Optional[StreamMetrics] = None
         self._stream_task: Optional[asyncio.Task] = None
 
     async def start_session(self) -> ExerciseSession:
-        """
-        Start a new exercise session and initialize data streaming.
-
-        Returns:
-            ExerciseSession: The newly created session object
-
-        Raises:
-            Exception: If session creation fails or device communication fails
-        """
+        """Start new exercise session with streaming"""
         try:
-            # Create initial session record in database
+            # Connect to device first (will stay connected during session)
+            await self.device.connect()
+
+            # Set device to manual mode
+            await self.device.set_mode("manual")
+
+            # Create session in database
             current_time = datetime.now(timezone.utc)
             query = """
                 INSERT INTO exercise_sessions 
@@ -65,53 +59,45 @@ class ExerciseStreamService:
 
             result = self.db.execute_query(query, params)
             if not result:
-                raise Exception("Failed to create exercise session in database")
+                raise Exception("Failed to create exercise session")
 
-            # Initialize session object
             self.current_session = ExerciseSession.from_db_row(result[0])
-            logger.info(f"Created new session with ID: {self.current_session.id}")
+            logger.info(f"Created session: {self.current_session.id}")
 
             # Start the walking pad
-            await self.device.controller.start_belt()
+            await self.device.start_walking()
             self._session_active = True
 
             # Start metrics streaming
             self._stream_task = asyncio.create_task(self._stream_session_data())
-            logger.info("Session data streaming started")
 
             return self.current_session
 
         except Exception as e:
-            logger.error(f"Failed to start session: {str(e)}")
             self._session_active = False
-            if self._stream_task:
-                self._stream_task.cancel()
+            await self.device.disconnect()
+            logger.error(f"Failed to start session: {e}")
             raise
 
     async def _stream_session_data(self):
-        """
-        Internal method to continuously stream session data from device.
-        Runs in a separate task and updates metrics regularly.
-        """
+        """Stream real-time data using fast status"""
         try:
             while self._session_active:
-                # Get new metrics from device
-                await self.device.controller.ask_stats()
-                stats = self.device.controller.last_status
+                # Get status using fast method
+                status = await self.device.get_fast_status()
 
-                if stats:
-                    # Update metrics from device data
-                    self._last_metrics = SessionMetrics(
-                        distance_km=stats.dist / 100,  # Convert from meters to km
-                        steps=stats.steps,
-                        duration_seconds=stats.time,
-                        speed=stats.speed / 10  # Convert to km/h
-                    )
+                # Update metrics
+                self._last_metrics = StreamMetrics(
+                    distance_km=status['distance'],
+                    steps=status['steps'],
+                    duration_seconds=status['time'],
+                    speed=status['speed'],
+                    belt_state=status['belt_state']
+                )
 
-                    # Save current metrics to database
-                    await self._update_session_in_db()
+                # Periodic database update
+                await self._update_session_in_db()
 
-                # Wait before next update
                 await asyncio.sleep(self._metrics_update_interval)
 
         except asyncio.CancelledError:
@@ -122,10 +108,7 @@ class ExerciseStreamService:
             raise
 
     async def _update_session_in_db(self):
-        """
-        Update current session metrics in database.
-        Called periodically during the session to maintain persistent state.
-        """
+        """Update session in database"""
         if not self._last_metrics or not self.current_session:
             return
 
@@ -150,60 +133,43 @@ class ExerciseStreamService:
             self.db.execute_query(query, params)
 
         except Exception as e:
-            logger.error(f"Failed to update session in database: {e}")
+            logger.error(f"Failed to update session in DB: {e}")
 
-    async def get_current_metrics(self) -> Optional[SessionMetrics]:
-        """
-        Get the most recent session metrics.
-
-        Returns:
-            SessionMetrics if available, None otherwise
-        """
+    async def get_current_metrics(self) -> Optional[StreamMetrics]:
+        """Get current session metrics"""
         return self._last_metrics
 
     async def end_session(self) -> ExerciseSession:
-        """
-        End the current exercise session and cleanup resources.
-        Calculates final metrics including calories burned.
-
-        Returns:
-            ExerciseSession: The completed session with final metrics
-
-        Raises:
-            ValueError: If no active session exists
-            Exception: If session completion fails
-        """
+        """End current session and cleanup"""
         try:
             if not self.current_session:
                 raise ValueError("No active session found")
 
-            # Stop the metrics stream
+            # Stop streaming
             self._session_active = False
             if self._stream_task:
                 self._stream_task.cancel()
                 await asyncio.wait_for(self._stream_task, timeout=5.0)
 
-            # Stop the walking pad
-            await self.device.controller.stop_belt()
+            # Stop the walking pad (this will also disconnect)
+            await self.device.stop_walking()
 
-            # Update session with final metrics
+            # Final session update
             end_time = datetime.now(timezone.utc)
             if self._last_metrics:
-                # Get user weight for calories calculation
+                # Get user weight for calories
                 user_result = self.db.execute_query(
                     "SELECT weight_kg FROM users WHERE id = %s",
                     (self.current_session.user_id,)
                 )
                 user_weight = user_result[0]['weight_kg'] if user_result else 70
 
-                # Calculate calories burned
                 calories = calculate_calories(
                     distance_km=self._last_metrics.distance_km,
                     duration_minutes=self._last_metrics.duration_seconds / 60,
                     weight_kg=user_weight
                 )
 
-                # Save final session data
                 query = """
                     UPDATE exercise_sessions 
                     SET 
@@ -231,17 +197,16 @@ class ExerciseStreamService:
 
                 result = self.db.execute_query(query, params)
                 if result:
-                    session = ExerciseSession.from_db_row(result[0])
+                    final_session = ExerciseSession.from_db_row(result[0])
                     self.current_session = None
                     self._last_metrics = None
-                    return session
+                    return final_session
 
             raise Exception("Failed to update final session data")
 
         except Exception as e:
-            logger.error(f"Error ending session: {e}", exc_info=True)
+            logger.error(f"Error ending session: {e}")
             raise
-
 
 # Create singleton instance
 exercise_stream_service = ExerciseStreamService()
