@@ -4,6 +4,7 @@ Simple treadmill control endpoints for basic operations
 - Start walking
 - Stop walking
 """
+import time
 from datetime import datetime
 
 from flask import Blueprint, jsonify, Response, json, app
@@ -165,40 +166,64 @@ async def stream_treadmill_data():
     async def generate():
         """
         Async generator that yields treadmill metrics data.
-
-        Yields:
-            str: JSON formatted data containing treadmill metrics
         """
         logger.info("Generate function started")
 
-        # Constants for connection and idle management
+        # Constants
         IDLE_MAX_COUNT = 3
         RECONNECT_MAX_ATTEMPTS = 3
         RECONNECT_DELAY = 2.0
 
-        # Counters for tracking idle state and reconnection attempts
         idle_count = 0
         reconnect_attempts = 0
+        last_connection_attempt = 0
+
+        async def ensure_connection():
+            nonlocal reconnect_attempts, last_connection_attempt
+            current_time = time.time()
+
+            if not device_service.is_connected:
+                if current_time - last_connection_attempt < RECONNECT_DELAY:
+                    await asyncio.sleep(RECONNECT_DELAY)
+                    return False
+
+                if reconnect_attempts >= RECONNECT_MAX_ATTEMPTS:
+                    logger.error("Maximum reconnection attempts reached")
+                    return False
+
+                logger.info(f"Attempting to reconnect (attempt {reconnect_attempts + 1})")
+                try:
+                    await device_service.connect()
+                    reconnect_attempts = 0
+                    last_connection_attempt = current_time
+                    return True
+                except Exception as conn_err:
+                    logger.error(f"Reconnection attempt failed: {conn_err}")
+                    reconnect_attempts += 1
+                    last_connection_attempt = current_time
+                    return False
+            return True
 
         try:
             while True:
                 try:
-                    # Check connection and reconnection logic...
-                    if not device_service.is_connected:
-                        # ... (reconnection code remains the same)
-                        pass
+                    # Ensure connection is active
+                    if not await ensure_connection():
+                        yield f"data: {json.dumps({'status': 'error', 'error': 'Connection failed'})}\n\n"
+                        await asyncio.sleep(RECONNECT_DELAY)
+                        continue
 
                     # Get current treadmill status
                     status = await device_service.get_status()
 
-                    # Handle null status
                     if status is None:
                         logger.warning("Received null status")
                         idle_count += 1
                         if idle_count >= IDLE_MAX_COUNT:
-                            logger.info("Maximum idle readings reached - ending stream")
                             break
                         continue
+
+                    logger.debug(f"Status type: {type(status)}, Status content: {status}")
 
                     # Convert status to dictionary based on its type
                     if isinstance(status, dict):
@@ -213,7 +238,6 @@ async def stream_treadmill_data():
                             'button': status.get('button', 0)
                         }
                     else:
-                        # Assuming it's a WalkingPadCurStatus object
                         status_dict = {
                             'distance': float(status.dist),
                             'time': int(status.time),
@@ -225,19 +249,16 @@ async def stream_treadmill_data():
                             'button': status.button
                         }
 
-                    # Check if treadmill is stopped
                     is_stopped = status_dict['speed'] == 0 and status_dict['state'] in [0, 1]
 
                     if is_stopped:
                         idle_count += 1
                         if idle_count >= IDLE_MAX_COUNT:
-                            logger.info("Belt stopped - ending stream")
                             yield f"data: {json.dumps({'status': 'stopped', 'metrics': status_dict})}\n\n"
                             break
                     else:
                         idle_count = 0
 
-                    # Prepare and send metric data
                     data = {
                         'status': 'active',
                         'metrics': {
@@ -248,7 +269,9 @@ async def stream_treadmill_data():
 
                     logger.debug(f"Sending metrics: {data}")
                     yield f"data: {json.dumps(data)}\n\n"
-                    await asyncio.sleep(1.0)
+
+                    # Petit délai pour éviter de surcharger la connexion
+                    await asyncio.sleep(0.5)
 
                 except Exception as e:
                     logger.error(f"Error in metrics loop: {e}")
@@ -268,7 +291,6 @@ async def stream_treadmill_data():
                 except Exception as e:
                     logger.error(f"Error during cleanup: {e}")
 
-    # Return SSE response with proper headers
     return Response(
         async_to_sync(generate()),
         mimetype='text/event-stream',
