@@ -3,6 +3,7 @@ Simple treadmill control endpoints for basic operations
 - Setup/reset state
 - Start walking
 - Stop walking
+- Real-time data streaming
 """
 import asyncio
 from datetime import datetime, timedelta
@@ -17,20 +18,20 @@ from api.utils.logger import get_logger
 logger = get_logger()
 bp = Blueprint('treadmill', __name__)
 
-# Initialize security service for state checks
+# Initialize security service for state validation
 security_service = ExerciseSecurityService(DatabaseService(), device_service)
 
 
 @bp.route('/setup', methods=['POST'])
 async def setup_treadmill():
     """
-    Reset and prepare treadmill for use
-    - Checks current state
+    Initialize and prepare treadmill for use.
+    - Validates current state
     - Cleans up any incomplete sessions
-    - Ensures proper mode
+    - Sets device to proper mode
     """
     try:
-        # Verify and clean device state
+        # Verify current state and clean if necessary
         is_ready, error_message = await security_service.check_and_clean_state()
         if not is_ready:
             logger.warning(f"Setup failed: {error_message}")
@@ -39,11 +40,11 @@ async def setup_treadmill():
                 'message': error_message
             }), 400
 
-        # Connect and ensure proper mode
+        # Establish connection and configure initial state
         await device_service.connect()
         await device_service.controller.stop_belt()
         await asyncio.sleep(device_service.minimal_cmd_space)
-        await device_service.controller.switch_mode(2)  # Set to standby
+        await device_service.controller.switch_mode(2)  # Set to standby mode
 
         return jsonify({
             'status': 'success',
@@ -61,26 +62,29 @@ async def setup_treadmill():
 
 @bp.route('/stop', methods=['POST'])
 async def stop_treadmill():
-    """Stop the treadmill"""
+    """
+    Safely stop the treadmill and reset to standby mode
+    Includes error handling and cleanup procedures
+    """
     try:
-        # S'assurer d'une connexion propre
+        # Ensure proper connection
         if not device_service.is_connected:
             await device_service.connect()
             await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Séquence d'arrêt
+        # Execute stop sequence
         await device_service.controller.stop_belt()
         await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Vérifier l'arrêt
+        # Verify stop status
         await device_service.controller.ask_stats()
         await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Passer en mode standby
+        # Switch to standby mode
         await device_service.controller.switch_mode(2)
         await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Déconnexion propre
+        # Clean disconnection
         await device_service.disconnect()
 
         return jsonify({
@@ -91,7 +95,7 @@ async def stop_treadmill():
 
     except Exception as e:
         logger.error(f"Stop failed: {e}")
-        # Tentative de nettoyage en cas d'erreur
+        # Attempt cleanup on error
         try:
             if device_service.is_connected:
                 await device_service.controller.stop_belt()
@@ -107,25 +111,28 @@ async def stop_treadmill():
 
 @bp.route('/start', methods=['POST'])
 async def start_treadmill():
-    """Start the treadmill in manual mode"""
+    """
+    Start the treadmill in manual mode
+    Includes connection management and error handling
+    """
     try:
-        # S'assurer que le device est déconnecté avant de commencer
+        # Ensure clean state before starting
         if device_service.is_connected:
             await device_service.disconnect()
             await asyncio.sleep(1)
 
-        # Nouvelle connexion
+        # Establish new connection
         await device_service.connect()
         await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Set manual mode and start
+        # Configure and start
         await device_service.controller.switch_mode(1)  # Manual mode
         await asyncio.sleep(device_service.minimal_cmd_space)
 
         await device_service.controller.start_belt()
         await asyncio.sleep(device_service.minimal_cmd_space)
 
-        # Vérifier le statut
+        # Verify status
         await device_service.controller.ask_stats()
         await asyncio.sleep(device_service.minimal_cmd_space)
 
@@ -143,7 +150,7 @@ async def start_treadmill():
 
     except Exception as e:
         logger.error(f"Start failed: {e}")
-        # Cleanup en cas d'erreur
+        # Emergency cleanup
         try:
             await device_service.controller.stop_belt()
             await device_service.disconnect()
@@ -155,33 +162,45 @@ async def start_treadmill():
         }), 500
 
 
-# Ajoutez ces fonctions d'aide
+# Helper functions
 async def safe_disconnect(device_service, logger):
-    """Safely disconnect from the device"""
+    """
+    Safely disconnect from device and reset states
+    Handles exceptions during disconnection
+    """
     try:
         if device_service.is_connected:
             await device_service.disconnect()
     except Exception as e:
         logger.warning(f"Safe disconnect warning: {e}")
     finally:
-        # Réinitialisation des états
+        # Reset states
         device_service.is_connected = False
         if hasattr(device_service.controller, 'last_status'):
             device_service.controller.last_status = None
 
 async def reset_device_state(device_service, logger):
-    """Reset device state and prepare for new connection"""
+    """
+    Complete device state reset
+    Ensures clean state for new connections
+    """
     await safe_disconnect(device_service, logger)
-    await asyncio.sleep(1)  # Attente pour s'assurer que tout est bien réinitialisé
+    await asyncio.sleep(1)  # Wait for complete reset
 
 
 @bp.route('/stream', methods=['GET'])
 def stream_treadmill_data():
-    """Stream real-time treadmill data"""
+    """
+    Stream real-time treadmill data using Server-Sent Events (SSE)
+    Provides continuous updates of device status and metrics
+    """
     logger.info("Stream endpoint called")
 
     async def is_idle_status(status):
-        """Check if the treadmill is in idle state"""
+        """
+        Check if the treadmill is in idle state
+        Returns True if all metrics are at zero/inactive
+        """
         return (
                 getattr(status, 'speed', 0) == 0 and
                 getattr(status, 'dist', 0) == 0 and
@@ -191,7 +210,10 @@ def stream_treadmill_data():
         )
 
     async def handle_idle_disconnect(device_service, logger):
-        """Handle disconnection when idle state is detected"""
+        """
+        Handle device disconnection when idle state is detected
+        Returns default status values for idle state
+        """
         logger.info("Idle state detected, initiating disconnect sequence")
         await reset_device_state(device_service, logger)
         return {
@@ -214,6 +236,10 @@ def stream_treadmill_data():
         }
 
     def generate():
+        """
+        Main generator function for SSE stream
+        Handles connection lifecycle and data formatting
+        """
         loop = None
         try:
             loop = asyncio.new_event_loop()
@@ -221,18 +247,24 @@ def stream_treadmill_data():
             logger.info("Generate function started")
 
             async def async_generate():
+                """
+                Asynchronous generator for device status updates
+                Includes idle detection and error handling
+                """
                 idle_count = 0
-                MAX_IDLE_COUNT = 3
+                MAX_IDLE_COUNT = 3  # Maximum consecutive idle readings before disconnect
 
                 try:
                     await reset_device_state(device_service, logger)
 
                     while True:
                         try:
+                            # Ensure connection is active
                             if not device_service.is_connected:
                                 await device_service.connect()
                                 await asyncio.sleep(0.5)
 
+                            # Request and process device stats
                             await device_service.controller.ask_stats()
                             await asyncio.sleep(0.2)
 
@@ -240,6 +272,7 @@ def stream_treadmill_data():
                             logger.debug(f"Current status: {cur_status}")
 
                             if cur_status:
+                                # Check for idle state
                                 if await is_idle_status(cur_status):
                                     idle_count += 1
                                     logger.debug(f"Idle state detected ({idle_count}/{MAX_IDLE_COUNT})")
@@ -251,6 +284,7 @@ def stream_treadmill_data():
                                 else:
                                     idle_count = 0
 
+                                # Format status data
                                 status_dict = {
                                     'mode': int(cur_status.mode) if hasattr(cur_status, 'mode') else None,
                                     'belt_state': int(cur_status.state) if hasattr(cur_status, 'state') else None,
@@ -265,6 +299,7 @@ def stream_treadmill_data():
                                     'connection_state': 'connected'
                                 }
 
+                                # Add formatted display values
                                 status_dict.update({
                                     'time_formatted': str(timedelta(seconds=status_dict['time'])),
                                     'distance_formatted': f"{status_dict['distance']:.2f} km",
@@ -304,6 +339,7 @@ def stream_treadmill_data():
                 finally:
                     await safe_disconnect(device_service, logger)
 
+            # Run the async generator
             async_gen = async_generate()
             while True:
                 try:
@@ -321,6 +357,7 @@ def stream_treadmill_data():
             yield f"data: {json.dumps({'error': 'Generator failed', 'details': str(e), 'connection_state': 'failed'})}\n\n"
 
         finally:
+            # Ensure proper cleanup
             try:
                 if loop and not loop.is_closed():
                     loop.run_until_complete(safe_disconnect(device_service, logger))
@@ -340,9 +377,12 @@ def stream_treadmill_data():
 
 
 def async_to_sync(async_generator):
-    """Convert async generator to sync generator"""
+    """
+    Utility function to convert async generator to sync generator
+    Manages event loop lifecycle
+    """
     loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)  # Définir explicitement la boucle
+    asyncio.set_event_loop(loop)
 
     try:
         while True:
