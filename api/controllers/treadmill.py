@@ -168,19 +168,36 @@ async def stream_treadmill_data():
                         # Get device status
                         status = await device_service.get_status()
 
-                        # Validate status data
-                        if not status or all(v == 0 for v in [status.get('distance', 0),
-                                                              status.get('steps', 0),
-                                                              status.get('time', 0)]):
-                            logger.warning("Received empty or invalid status")
+                        # Check if we're getting real data from the device
+                        if status is None:
+                            logger.warning("Received null status")
                             idle_count += 1
                             if idle_count >= MAX_IDLE_COUNT:
                                 logger.info("Maximum idle readings reached - ending stream")
                                 break
                             continue
 
-                        # Reset idle counter if we got valid data
-                        idle_count = 0
+                        # Check if the belt is actually stopped
+                        is_stopped = (status.get('speed', 0) == 0 and
+                                      status.get('belt_state') in ['idle', 'standby'])
+
+                        if is_stopped:
+                            idle_count += 1
+                            if idle_count >= MAX_IDLE_COUNT:
+                                logger.info("Belt stopped - ending stream")
+                                # Send final status before breaking
+                                yield f"data: {json.dumps({
+                                    'timestamp': datetime.now().isoformat(),
+                                    'distance_km': float(status.get('distance', 0)),
+                                    'steps': int(status.get('steps', 0)),
+                                    'time': int(status.get('time', 0)),
+                                    'speed': float(status.get('speed', 0)),
+                                    'belt_state': status.get('belt_state', 'unknown'),
+                                    'status': 'stopped'
+                                })}\n\n"
+                                break
+                        else:
+                            idle_count = 0  # Reset idle counter if belt is moving
 
                         # Prepare metric data
                         data = {
@@ -193,6 +210,7 @@ async def stream_treadmill_data():
                             'status': 'active'
                         }
 
+                        logger.debug(f"Sending metrics: {data}")
                         yield f"data: {json.dumps(data)}\n\n"
                         await asyncio.sleep(1.0)  # 1 second update interval
 
@@ -244,3 +262,4 @@ async def stream_treadmill_data():
             'X-Accel-Buffering': 'no'
         }
     )
+
