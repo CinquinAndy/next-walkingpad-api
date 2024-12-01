@@ -6,6 +6,19 @@ meta {
 
 post {
   url: http://localhost:5678/api/sessions/sessions/end
-  body: none
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "distance_km":"",
+    "steps":"",
+    "duration_seconds":"",
+    "calories":"",
+    "average_speed":"",
+    "max_speed":"",
+    "mode":"",
+    "notes": "imported from app mobile"
+  }
 }
