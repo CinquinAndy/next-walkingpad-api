@@ -20,18 +20,6 @@ bp = Blueprint('treadmill', __name__)
 # Initialize security service for state checks
 security_service = ExerciseSecurityService(DatabaseService(), device_service)
 
-def async_to_sync(async_generator):
-    """Convert an async generator to a sync generator."""
-    loop = asyncio.new_event_loop()
-    try:
-        while True:
-            try:
-                yield loop.run_until_complete(async_generator.__anext__())
-            except StopAsyncIteration:
-                break
-    finally:
-        loop.close()
-
 @bp.route('/setup', methods=['POST'])
 async def setup_treadmill():
     """
@@ -143,24 +131,62 @@ async def stop_treadmill():
         }), 500
 
 
+def async_to_sync(async_generator):
+    """
+    Convert an async generator to a sync generator.
+
+    Args:
+        async_generator: The async generator to convert
+
+    Yields:
+        The values from the async generator in a synchronous way
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        while True:
+            try:
+                yield loop.run_until_complete(async_generator.__anext__())
+            except StopAsyncIteration:
+                break
+    finally:
+        loop.close()
+
+
 @bp.route('/stream', methods=['GET'])
 async def stream_treadmill_data():
+    """
+    Stream real-time treadmill data as Server-Sent Events (SSE).
+
+    Returns:
+        Response: A Flask response object configured for SSE streaming
+    """
     logger.info("Stream endpoint called")
 
     async def generate():
+        """
+        Async generator that yields treadmill metrics data.
+
+        Yields:
+            str: JSON formatted data containing treadmill metrics
+        """
         logger.info("Generate function started")
-        idle_count = 0
-        MAX_IDLE_COUNT = 3
-        reconnect_attempts = 0
-        MAX_RECONNECT_ATTEMPTS = 3
+
+        # Constants for connection and idle management
+        IDLE_MAX_COUNT = 3
+        RECONNECT_MAX_ATTEMPTS = 3
         RECONNECT_DELAY = 2.0
+
+        # Counters for tracking idle state and reconnection attempts
+        idle_count = 0
+        reconnect_attempts = 0
 
         try:
             while True:
                 try:
+                    # Check connection status and attempt reconnection if needed
                     if not device_service.is_connected:
-                        if reconnect_attempts >= MAX_RECONNECT_ATTEMPTS:
-                            logger.error("Max reconnection attempts reached")
+                        if reconnect_attempts >= RECONNECT_MAX_ATTEMPTS:
+                            logger.error("Maximum reconnection attempts reached")
                             yield f"data: {json.dumps({'status': 'error', 'error': 'Device connection lost'})}\n\n"
                             break
 
@@ -174,39 +200,43 @@ async def stream_treadmill_data():
                             await asyncio.sleep(RECONNECT_DELAY)
                             continue
 
+                    # Get current treadmill status
                     status = await device_service.get_status()
 
+                    # Handle null status
                     if status is None:
                         logger.warning("Received null status")
                         idle_count += 1
-                        if idle_count >= MAX_IDLE_COUNT:
+                        if idle_count >= IDLE_MAX_COUNT:
                             logger.info("Maximum idle readings reached - ending stream")
                             break
                         continue
 
-                    # Convert WalkingPadCurStatus to dictionary with actual values
+                    # Convert WalkingPadCurStatus object to dictionary
                     status_dict = {
                         'distance': float(status.dist),
                         'time': int(status.time),
                         'steps': int(status.steps),
                         'speed': float(status.speed),
                         'state': status.state,
-                        'mode': status.mode
+                        'mode': status.mode,
+                        'app_speed': float(status.app_speed),
+                        'button': status.button
                     }
 
-                    # Check if the belt is actually stopped
+                    # Check if treadmill is stopped
                     is_stopped = status.speed == 0 and status.state in [0, 1]
 
                     if is_stopped:
                         idle_count += 1
-                        if idle_count >= MAX_IDLE_COUNT:
+                        if idle_count >= IDLE_MAX_COUNT:
                             logger.info("Belt stopped - ending stream")
                             yield f"data: {json.dumps({'status': 'stopped', 'metrics': status_dict})}\n\n"
                             break
                     else:
                         idle_count = 0
 
-                    # Prepare metric data
+                    # Prepare and send metric data
                     data = {
                         'status': 'active',
                         'metrics': {
@@ -221,19 +251,25 @@ async def stream_treadmill_data():
 
                 except Exception as e:
                     logger.error(f"Error in metrics loop: {e}")
+                    logger.exception("Detailed error trace:")
+
+                    # Handle connection-related errors
                     if "Unreachable" in str(e) or "disconnected" in str(e).lower():
                         device_service.is_connected = False
                         continue
+
                     yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
                     await asyncio.sleep(1.0)
 
         finally:
+            # Cleanup: ensure device is disconnected
             if device_service.is_connected:
                 try:
                     await device_service.disconnect()
                 except Exception as e:
                     logger.error(f"Error during cleanup: {e}")
 
+    # Return SSE response with proper headers
     return Response(
         async_to_sync(generate()),
         mimetype='text/event-stream',
