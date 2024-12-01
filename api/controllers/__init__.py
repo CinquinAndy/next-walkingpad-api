@@ -1,7 +1,7 @@
 """
 Controllers initialization and blueprint registration
 """
-from . import device, exercise, settings, targets
+from . import device, exercise, settings, targets, initialization
 from api.utils.logger import logger
 
 def register_blueprints(app):
@@ -11,3 +11,4 @@ def register_blueprints(app):
     app.register_blueprint(exercise.bp, url_prefix='/api/exercise')
     app.register_blueprint(settings.bp, url_prefix='/api/settings')
     app.register_blueprint(targets.bp, url_prefix='/api/targets')
+    app.register_blueprint(initialization.bp, url_prefix='/api/initialization')
