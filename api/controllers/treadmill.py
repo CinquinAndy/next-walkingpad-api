@@ -168,41 +168,28 @@ def stream_treadmill_data():
 
         async def async_generate():
             try:
-                # Connexion initiale
-                if not device_service.is_connected:
-                    await device_service.connect()
-                    await asyncio.sleep(1)
+                # S'assurer que nous commençons avec une connexion propre
+                if device_service.is_connected:
+                    await device_service.disconnect()
+                    await asyncio.sleep(0.5)
+
+                await device_service.connect()
+                await asyncio.sleep(0.5)
 
                 while True:
                     try:
-                        # Vérifier la connexion
                         if not device_service.is_connected:
                             await device_service.connect()
-                            await asyncio.sleep(1)
+                            await asyncio.sleep(0.5)
 
-                        # Demander les stats
-                        await device_service.controller.ask_stats()
-                        await asyncio.sleep(0.5)
+                        # Utiliser get_fast_status qui gère déjà la logique de mise à jour
+                        status = await device_service.get_fast_status()
+                        logger.debug(f"Stream status: {status}")
 
-                        status = device_service.controller.last_status
+                        # Ajouter le timestamp
+                        status['timestamp'] = datetime.now().isoformat()
 
-                        if not status:
-                            continue
-
-                        # Convertir le status en dictionnaire
-                        status_dict = {
-                            'distance': float(status.dist) / 100,
-                            'time': int(status.time),
-                            'steps': int(status.steps),
-                            'speed': float(status.speed) / 10,
-                            'state': status.belt_state,  # Changé de status.state à status.belt_state
-                            'mode': status.manual_mode,  # Changé de status.mode à status.manual_mode
-                            'app_speed': float(status.app_speed) / 30 if status.app_speed > 0 else 0,
-                            'button': status.controller_button,
-                            'timestamp': datetime.now().isoformat()
-                        }
-
-                        yield f"data: {json.dumps(status_dict)}\n\n"
+                        yield f"data: {json.dumps(status)}\n\n"
                         await asyncio.sleep(0.5)
 
                     except Exception as e:
@@ -221,7 +208,6 @@ def stream_treadmill_data():
                 except Exception as e:
                     logger.error(f"Error during disconnect: {e}")
 
-        # Exécuter le générateur asynchrone
         async_gen = async_generate()
         while True:
             try:
@@ -245,7 +231,6 @@ def stream_treadmill_data():
             'Content-Type': 'text/event-stream'
         }
     )
-
 
 def async_to_sync(async_generator):
     """Convert async generator to sync generator"""
