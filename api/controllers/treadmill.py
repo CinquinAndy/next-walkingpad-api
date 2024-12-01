@@ -181,18 +181,30 @@ def stream_treadmill_data():
                             await device_service.connect()
                             await asyncio.sleep(0.5)
 
-                        status = await device_service.get_fast_status()
-                        logger.debug(f"Raw status from device: {status}")
+                        # Demander les stats directement
+                        await device_service.controller.ask_stats()
+                        await asyncio.sleep(0.2)
 
-                        # Vérifier si le status est valide
-                        if all(v is None for v in status.values()):
-                            logger.warning("Invalid status received, skipping")
-                            await asyncio.sleep(0.5)
-                            continue
+                        # Utiliser last_status au lieu de get_fast_status
+                        cur_status = device_service.controller.last_status
+                        logger.debug(f"Current status: {cur_status}")
 
-                        status['timestamp'] = datetime.now().isoformat()
+                        if cur_status:
+                            status_dict = {
+                                'mode': cur_status.mode,
+                                'belt_state': cur_status.state,
+                                'speed': cur_status.speed / 10,  # Convertir en km/h
+                                'distance': cur_status.dist / 100,  # Convertir en km
+                                'steps': cur_status.steps,
+                                'time': cur_status.time,
+                                'timestamp': datetime.now().isoformat()
+                            }
+                            logger.debug(f"Formatted status: {status_dict}")
+                            yield f"data: {json.dumps(status_dict)}\n\n"
+                        else:
+                            logger.warning("No status available")
+                            yield f"data: {json.dumps({'error': 'No status available'})}\n\n"
 
-                        yield f"data: {json.dumps(status)}\n\n"
                         await asyncio.sleep(0.5)
 
                     except Exception as e:
@@ -207,6 +219,7 @@ def stream_treadmill_data():
             finally:
                 try:
                     if device_service.is_connected:
+                        loop = asyncio.get_event_loop()
                         await device_service.disconnect()
                 except Exception as e:
                     logger.error(f"Error during disconnect: {e}")
@@ -234,6 +247,7 @@ def stream_treadmill_data():
             'Content-Type': 'text/event-stream'
         }
     )
+
 
 
 def async_to_sync(async_generator):
