@@ -181,22 +181,23 @@ def stream_treadmill_data():
                             await device_service.connect()
                             await asyncio.sleep(0.5)
 
-                        # Demander les stats directement
                         await device_service.controller.ask_stats()
                         await asyncio.sleep(0.2)
 
-                        # Utiliser last_status au lieu de get_fast_status
                         cur_status = device_service.controller.last_status
                         logger.debug(f"Current status: {cur_status}")
 
                         if cur_status:
+                            # Utiliser les noms d'attributs corrects
                             status_dict = {
-                                'mode': cur_status.mode,
-                                'belt_state': cur_status.state,
-                                'speed': cur_status.speed / 10,  # Convertir en km/h
-                                'distance': cur_status.dist / 100,  # Convertir en km
-                                'steps': cur_status.steps,
-                                'time': cur_status.time,
+                                'mode': getattr(cur_status, 'mode', None),  # Mode manuel/automatique
+                                'belt_state': getattr(cur_status, 'state', None),  # État de la courroie
+                                'speed': getattr(cur_status, 'speed', 0),  # Vitesse actuelle
+                                'distance': getattr(cur_status, 'dist', 0),  # Distance parcourue
+                                'steps': getattr(cur_status, 'steps', 0),  # Nombre de pas
+                                'time': getattr(cur_status, 'time', 0),  # Temps écoulé
+                                'app_speed': getattr(cur_status, 'app_speed', 0),  # Vitesse définie par l'app
+                                'button': getattr(cur_status, 'button', 0),  # État du bouton
                                 'timestamp': datetime.now().isoformat()
                             }
                             logger.debug(f"Formatted status: {status_dict}")
@@ -208,12 +209,12 @@ def stream_treadmill_data():
                         await asyncio.sleep(0.5)
 
                     except Exception as e:
-                        logger.error(f"Error during stream: {e}")
+                        logger.error(f"Error during stream: {e}", exc_info=True)
                         yield f"data: {json.dumps({'error': str(e)})}\n\n"
                         await asyncio.sleep(1)
 
             except Exception as e:
-                logger.error(f"Fatal error in stream: {e}")
+                logger.error(f"Fatal error in stream: {e}", exc_info=True)
                 yield f"data: {json.dumps({'error': 'Stream terminated'})}\n\n"
 
             finally:
@@ -247,6 +248,7 @@ def stream_treadmill_data():
             'Content-Type': 'text/event-stream'
         }
     )
+
 
 
 
