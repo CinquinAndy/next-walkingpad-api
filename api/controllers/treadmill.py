@@ -4,17 +4,14 @@ Simple treadmill control endpoints for basic operations
 - Start walking
 - Stop walking
 """
-import time
-from datetime import datetime
-
-from flask import Blueprint, jsonify, Response, json, app
 import asyncio
+from datetime import datetime, timedelta
 
-from ph4_walkingpad.pad import WalkingPadCurStatus
+from flask import Blueprint, jsonify, Response, json
 
+from api.services.database import DatabaseService
 from api.services.device import device_service
 from api.services.security import ExerciseSecurityService
-from api.services.database import DatabaseService
 from api.utils.logger import get_logger
 
 logger = get_logger()
@@ -22,6 +19,7 @@ bp = Blueprint('treadmill', __name__)
 
 # Initialize security service for state checks
 security_service = ExerciseSecurityService(DatabaseService(), device_service)
+
 
 @bp.route('/setup', methods=['POST'])
 async def setup_treadmill():
@@ -59,6 +57,7 @@ async def setup_treadmill():
             'status': 'error',
             'message': str(e)
         }), 500
+
 
 @bp.route('/stop', methods=['POST'])
 async def stop_treadmill():
@@ -188,18 +187,39 @@ def stream_treadmill_data():
                         logger.debug(f"Current status: {cur_status}")
 
                         if cur_status:
-                            # Utiliser les noms d'attributs corrects
+                            # Convertir les valeurs avec les bonnes unités
                             status_dict = {
-                                'mode': getattr(cur_status, 'mode', None),  # Mode manuel/automatique
-                                'belt_state': getattr(cur_status, 'state', None),  # État de la courroie
-                                'speed': getattr(cur_status, 'speed', 0),  # Vitesse actuelle
-                                'distance': getattr(cur_status, 'dist', 0),  # Distance parcourue
-                                'steps': getattr(cur_status, 'steps', 0),  # Nombre de pas
-                                'time': getattr(cur_status, 'time', 0),  # Temps écoulé
-                                'app_speed': getattr(cur_status, 'app_speed', 0),  # Vitesse définie par l'app
-                                'button': getattr(cur_status, 'button', 0),  # État du bouton
-                                'timestamp': datetime.now().isoformat()
+                                'mode': int(cur_status.mode) if hasattr(cur_status, 'mode') else None,
+                                'belt_state': int(cur_status.state) if hasattr(cur_status, 'state') else None,
+                                'speed': float(cur_status.speed) / 10 if hasattr(cur_status, 'speed') else 0,  # Conversion en km/h
+                                'distance': float(cur_status.dist) / 100 if hasattr(cur_status, 'dist') else 0,  # Conversion en km
+                                'steps': int(cur_status.steps) if hasattr(cur_status, 'steps') else 0,
+                                'time': int(cur_status.time) if hasattr(cur_status, 'time') else 0,  # Temps en secondes
+                                'app_speed': float(cur_status.app_speed) if hasattr(cur_status, 'app_speed') else 0,
+                                'button': int(cur_status.button) if hasattr(cur_status, 'button') else 0,
+                                'timestamp': datetime.now().isoformat(),
+                                'raw_status': str(cur_status)  # Ajouter le status brut pour debug
                             }
+
+                            # Ajouter des informations formatées pour l'affichage
+                            status_dict.update({
+                                'time_formatted': str(timedelta(seconds=status_dict['time'])),
+                                'distance_formatted': f"{status_dict['distance']:.2f} km",
+                                'speed_formatted': f"{status_dict['speed']:.1f} km/h",
+                                'belt_state_text': {
+                                    0: 'Stopped',
+                                    1: 'Starting',
+                                    2: 'Running',
+                                    3: 'Stopping',
+                                    4: 'Error'
+                                }.get(status_dict['belt_state'], 'Unknown'),
+                                'mode_text': {
+                                    0: 'Standby',
+                                    1: 'Manual',
+                                    2: 'Automatic'
+                                }.get(status_dict['mode'], 'Unknown')
+                            })
+
                             logger.debug(f"Formatted status: {status_dict}")
                             yield f"data: {json.dumps(status_dict)}\n\n"
                         else:
@@ -220,7 +240,6 @@ def stream_treadmill_data():
             finally:
                 try:
                     if device_service.is_connected:
-                        loop = asyncio.get_event_loop()
                         await device_service.disconnect()
                 except Exception as e:
                     logger.error(f"Error during disconnect: {e}")
@@ -248,8 +267,6 @@ def stream_treadmill_data():
             'Content-Type': 'text/event-stream'
         }
     )
-
-
 
 
 def async_to_sync(async_generator):
