@@ -155,108 +155,130 @@ async def start_treadmill():
         }), 500
 
 
+# Ajoutez ces fonctions d'aide
+async def safe_disconnect(device_service, logger):
+    """Safely disconnect from the device"""
+    try:
+        if device_service.is_connected:
+            await device_service.disconnect()
+    except Exception as e:
+        logger.warning(f"Safe disconnect warning: {e}")
+    finally:
+        # Réinitialisation des états
+        device_service.is_connected = False
+        if hasattr(device_service.controller, 'last_status'):
+            device_service.controller.last_status = None
+
+async def reset_device_state(device_service, logger):
+    """Reset device state and prepare for new connection"""
+    await safe_disconnect(device_service, logger)
+    await asyncio.sleep(1)  # Attente pour s'assurer que tout est bien réinitialisé
+
 @bp.route('/stream', methods=['GET'])
 def stream_treadmill_data():
     """Stream real-time treadmill data"""
     logger.info("Stream endpoint called")
 
     def generate():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        logger.info("Generate function started")
+        loop = None
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            logger.info("Generate function started")
 
-        async def async_generate():
-            try:
-                if device_service.is_connected:
-                    await device_service.disconnect()
-                    await asyncio.sleep(0.5)
+            async def async_generate():
+                try:
+                    # Réinitialisation initiale
+                    await reset_device_state(device_service, logger)
 
-                await device_service.connect()
-                await asyncio.sleep(0.5)
+                    while True:
+                        try:
+                            if not device_service.is_connected:
+                                await device_service.connect()
+                                await asyncio.sleep(0.5)
 
-                while True:
-                    try:
-                        if not device_service.is_connected:
-                            await device_service.connect()
+                            await device_service.controller.ask_stats()
+                            await asyncio.sleep(0.2)
+
+                            cur_status = device_service.controller.last_status
+                            logger.debug(f"Current status: {cur_status}")
+
+                            if cur_status:
+                                status_dict = {
+                                    'mode': int(cur_status.mode) if hasattr(cur_status, 'mode') else None,
+                                    'belt_state': int(cur_status.state) if hasattr(cur_status, 'state') else None,
+                                    'speed': float(cur_status.speed) if hasattr(cur_status, 'speed') else 0,
+                                    'distance': float(cur_status.dist) if hasattr(cur_status, 'dist') else 0,
+                                    'steps': int(cur_status.steps) if hasattr(cur_status, 'steps') else 0,
+                                    'time': int(cur_status.time) if hasattr(cur_status, 'time') else 0,
+                                    'app_speed': float(cur_status.app_speed) if hasattr(cur_status, 'app_speed') else 0,
+                                    'button': int(cur_status.button) if hasattr(cur_status, 'button') else 0,
+                                    'timestamp': datetime.now().isoformat(),
+                                    'raw_status': str(cur_status)
+                                }
+
+                                status_dict.update({
+                                    'time_formatted': str(timedelta(seconds=status_dict['time'])),
+                                    'distance_formatted': f"{status_dict['distance']:.2f} km",
+                                    'speed_formatted': f"{status_dict['speed']:.1f} km/h",
+                                    'belt_state_text': {
+                                        0: 'Stopped',
+                                        1: 'Starting',
+                                        2: 'Running',
+                                        3: 'Stopping',
+                                        4: 'Error'
+                                    }.get(status_dict['belt_state'], 'Unknown'),
+                                    'mode_text': {
+                                        0: 'Standby',
+                                        1: 'Manual',
+                                        2: 'Automatic'
+                                    }.get(status_dict['mode'], 'Unknown')
+                                })
+
+                                logger.debug(f"Formatted status: {status_dict}")
+                                yield f"data: {json.dumps(status_dict)}\n\n"
+                            else:
+                                logger.warning("No status available")
+                                yield f"data: {json.dumps({'error': 'No status available'})}\n\n"
+
                             await asyncio.sleep(0.5)
 
-                        await device_service.controller.ask_stats()
-                        await asyncio.sleep(0.2)
+                        except Exception as e:
+                            logger.error(f"Error during stream: {e}", exc_info=True)
+                            # Tentative de réinitialisation en cas d'erreur
+                            await reset_device_state(device_service, logger)
+                            yield f"data: {json.dumps({'error': str(e), 'status': 'reconnecting'})}\n\n"
+                            await asyncio.sleep(2)  # Délai plus long avant nouvelle tentative
 
-                        cur_status = device_service.controller.last_status
-                        logger.debug(f"Current status: {cur_status}")
-
-                        if cur_status:
-                            # Convertir les valeurs avec les bonnes unités
-                            status_dict = {
-                                'mode': int(cur_status.mode) if hasattr(cur_status, 'mode') else None,
-                                'belt_state': int(cur_status.state) if hasattr(cur_status, 'state') else None,
-                                'speed': float(cur_status.speed) / 10 if hasattr(cur_status, 'speed') else 0,  # Conversion en km/h
-                                'distance': float(cur_status.dist) / 100 if hasattr(cur_status, 'dist') else 0,  # Conversion en km
-                                'steps': int(cur_status.steps) if hasattr(cur_status, 'steps') else 0,
-                                'time': int(cur_status.time) if hasattr(cur_status, 'time') else 0,  # Temps en secondes
-                                'app_speed': float(cur_status.app_speed) if hasattr(cur_status, 'app_speed') else 0,
-                                'button': int(cur_status.button) if hasattr(cur_status, 'button') else 0,
-                                'timestamp': datetime.now().isoformat(),
-                                'raw_status': str(cur_status)  # Ajouter le status brut pour debug
-                            }
-
-                            # Ajouter des informations formatées pour l'affichage
-                            status_dict.update({
-                                'time_formatted': str(timedelta(seconds=status_dict['time'])),
-                                'distance_formatted': f"{status_dict['distance']:.2f} km",
-                                'speed_formatted': f"{status_dict['speed']:.1f} km/h",
-                                'belt_state_text': {
-                                    0: 'Stopped',
-                                    1: 'Starting',
-                                    2: 'Running',
-                                    3: 'Stopping',
-                                    4: 'Error'
-                                }.get(status_dict['belt_state'], 'Unknown'),
-                                'mode_text': {
-                                    0: 'Standby',
-                                    1: 'Manual',
-                                    2: 'Automatic'
-                                }.get(status_dict['mode'], 'Unknown')
-                            })
-
-                            logger.debug(f"Formatted status: {status_dict}")
-                            yield f"data: {json.dumps(status_dict)}\n\n"
-                        else:
-                            logger.warning("No status available")
-                            yield f"data: {json.dumps({'error': 'No status available'})}\n\n"
-
-                        await asyncio.sleep(0.5)
-
-                    except Exception as e:
-                        logger.error(f"Error during stream: {e}", exc_info=True)
-                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
-                        await asyncio.sleep(1)
-
-            except Exception as e:
-                logger.error(f"Fatal error in stream: {e}", exc_info=True)
-                yield f"data: {json.dumps({'error': 'Stream terminated'})}\n\n"
-
-            finally:
-                try:
-                    if device_service.is_connected:
-                        await device_service.disconnect()
                 except Exception as e:
-                    logger.error(f"Error during disconnect: {e}")
+                    logger.error(f"Fatal error in stream: {e}", exc_info=True)
+                    yield f"data: {json.dumps({'error': 'Stream terminated', 'details': str(e)})}\n\n"
 
-        async_gen = async_generate()
-        while True:
+                finally:
+                    await safe_disconnect(device_service, logger)
+
+            async_gen = async_generate()
+            while True:
+                try:
+                    data = loop.run_until_complete(async_gen.__anext__())
+                    yield data
+                except StopAsyncIteration:
+                    break
+                except Exception as e:
+                    logger.error(f"Stream error: {e}")
+                    break
+
+        except Exception as e:
+            logger.error(f"Fatal generator error: {e}", exc_info=True)
+            yield f"data: {json.dumps({'error': 'Generator failed', 'details': str(e)})}\n\n"
+
+        finally:
             try:
-                data = loop.run_until_complete(async_gen.__anext__())
-                yield data
-            except StopAsyncIteration:
-                break
+                if loop and not loop.is_closed():
+                    loop.run_until_complete(safe_disconnect(device_service, logger))
+                    loop.close()
             except Exception as e:
-                logger.error(f"Stream error: {e}")
-                break
-
-        if not loop.is_closed():
-            loop.close()
+                logger.error(f"Cleanup error: {e}")
 
     return Response(
         generate(),
