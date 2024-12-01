@@ -1,7 +1,8 @@
 """
-WalkingPad device service
+WalkingPad device service with optimized connection handling and status tracking
 """
 import asyncio
+from typing import Dict
 
 from ph4_walkingpad import pad
 from ph4_walkingpad.pad import WalkingPad, Controller
@@ -20,42 +21,73 @@ class DeviceService:
         pad.logger = self.log
         self.controller = Controller()
         self.minimal_cmd_space = Config.MINIMAL_CMD_SPACE
+        self.is_connected = False
 
-        # Set up status handler
-        self.last_status = {
-            "steps": None,
-            "distance": None,
-            "time": None
+        # Enhanced status tracking
+        self._last_status = {
+            "mode": None,
+            "belt_state": None,
+            "speed": 0,
+            "distance": 0,
+            "steps": 0,
+            "time": 0
         }
+
         self.controller.handler_last_status = self._on_new_status
 
     def _on_new_status(self, sender, record):
-        """Handle new status updates from device"""
-        distance_in_km = record.dist / 100
-        print(f"Distance: {distance_in_km}km")
-        print(f"Time: {record.time} seconds")
-        print(f"Steps: {record.steps}")
-
-        self.last_status.update({
+        """
+        Handle new status updates from device.
+        Updates internal status cache with latest values.
+        """
+        # Update internal status cache with converted values
+        self._last_status.update({
+            "mode": self._get_mode_string(record.manual_mode),
+            "belt_state": self._get_belt_state_string(record.belt_state),
+            "speed": record.speed / 10,
+            "distance": record.dist / 100,
             "steps": record.steps,
-            "distance": distance_in_km,
             "time": record.time
         })
+
+        logger.debug(f"Status updated - Distance: {self._last_status['distance']}km, "
+                    f"Steps: {self._last_status['steps']}, "
+                    f"Time: {self._last_status['time']} seconds")
+
+    async def get_fast_status(self) -> Dict:
+        """
+        Get current device status without reconnecting.
+        Must be used only when device is already connected.
+
+        Returns:
+            Dict: Current device status
+
+        Raises:
+            RuntimeError: If device is not connected
+        """
+        if not self.is_connected:
+            raise RuntimeError("Device must be connected to use fast status")
+
+        try:
+            await self.controller.ask_stats()
+            await asyncio.sleep(self.minimal_cmd_space)
+            return self._last_status.copy()
+        except Exception as e:
+            logger.error(f"Fast status check failed: {e}")
+            raise
 
     async def start_walking(self, initial_speed: int = None):
         """Start the walking pad"""
         logger.info(f"Starting walking pad with initial speed: {initial_speed}")
         try:
-            await self.connect()
+            if not self.is_connected:
+                await self.connect()
 
-            # Set initial speed if provided
             if initial_speed is not None:
-                # Convert speed to the format expected by the device (multiply by 10)
                 device_speed = initial_speed * 10
                 await self.controller.change_speed(device_speed)
                 await asyncio.sleep(self.minimal_cmd_space)
 
-            # Start the belt
             await self.controller.start_belt()
             await asyncio.sleep(self.minimal_cmd_space)
 
@@ -64,15 +96,16 @@ class DeviceService:
 
         except Exception as e:
             logger.error(f"Failed to start walking pad: {e}")
+            await self.disconnect()  # Disconnect only on error
             raise
-        finally:
-            await self.disconnect()
 
     async def stop_walking(self):
         """Stop the walking pad"""
         logger.info("Stopping walking pad")
         try:
-            await self.connect()
+            if not self.is_connected:
+                await self.connect()
+
             await self.controller.stop_belt()
             await asyncio.sleep(self.minimal_cmd_space)
 
@@ -85,99 +118,34 @@ class DeviceService:
         finally:
             await self.disconnect()
 
-    async def set_speed(self, speed: int):
-        """Set the walking pad speed"""
-        logger.info(f"Setting speed to: {speed}")
-        try:
-            await self.connect()
-            await self.controller.change_speed(speed)  # Convert to device speed
-            await asyncio.sleep(self.minimal_cmd_space)
-
-            logger.info(f"Speed set successfully to {speed}")
-            return {"success": True, "current_speed": speed}
-
-        except Exception as e:
-            logger.error(f"Failed to set speed: {e}")
-            raise
-        finally:
-            await self.disconnect()
-
-    async def set_mode(self, mode: str):
-        """Set the walking pad mode"""
-        logger.info(f"Setting mode to: {mode}")
-        try:
-            await self.connect()
-
-            # Convert string mode to controller mode
-            if mode == "manual":
-                mode_value = WalkingPad.MODE_MANUAL
-            elif mode == "auto":
-                mode_value = WalkingPad.MODE_AUTOMAT
-            elif mode == "standby":
-                mode_value = WalkingPad.MODE_STANDBY
-            else:
-                raise ValueError(f"Invalid mode: {mode}")
-
-            await self.controller.switch_mode(mode_value)
-            await asyncio.sleep(self.minimal_cmd_space)
-
-            logger.info(f"Mode set successfully to {mode}")
-            return {"success": True, "mode": mode}
-
-        except Exception as e:
-            logger.error(f"Failed to set mode: {e}")
-            raise
-        finally:
-            await self.disconnect()
-
-    async def calibrate(self):
-        """Calibrate the walking pad"""
-        logger.info("Starting calibration")
-        try:
-            await self.connect()
-            await self.controller.calibrate()
-            await asyncio.sleep(self.minimal_cmd_space)
-
-            logger.info("Calibration completed successfully")
-            return {"success": True, "message": "Calibration completed"}
-
-        except Exception as e:
-            logger.error(f"Calibration failed: {e}")
-            raise
-        finally:
-            await self.disconnect()
-
-
     async def connect(self):
         """Connect to the WalkingPad device"""
-        logger.info("[try to connect]")
-        address = Config.get_device_address()
-        print(f"Connecting to {address}")
-        await self.controller.run(address)
-        await asyncio.sleep(self.minimal_cmd_space)
+        if not self.is_connected:
+            logger.info("Connecting to device...")
+            address = Config.get_device_address()
+            await self.controller.run(address)
+            await asyncio.sleep(self.minimal_cmd_space)
+            self.is_connected = True
+            logger.info("Device connected successfully")
 
     async def disconnect(self):
         """Disconnect from device"""
-        await self.controller.disconnect()
-        await asyncio.sleep(self.minimal_cmd_space)
+        if self.is_connected:
+            await self.controller.disconnect()
+            await asyncio.sleep(self.minimal_cmd_space)
+            self.is_connected = False
+            logger.info("Device disconnected")
 
     async def get_status(self):
-        """Get current device status"""
+        """
+        Get current device status (with full connection cycle).
+        Use get_fast_status() instead if device is already connected.
+        """
         try:
             await self.connect()
-            logger.info("[service device] - after connect")
-            await self.controller.ask_stats()
-            await asyncio.sleep(self.minimal_cmd_space)
-
-            stats = self.controller.last_status
-            return {
-                "mode": self._get_mode_string(stats.manual_mode),
-                "belt_state": self._get_belt_state_string(stats.belt_state),
-                "distance": stats.dist / 100,
-                "time": stats.time,
-                "steps": stats.steps,
-                "speed": stats.speed / 10
-            }
+            logger.info("Getting device status")
+            status = await self.get_fast_status()
+            return status
         finally:
             await self.disconnect()
 
