@@ -168,7 +168,6 @@ def stream_treadmill_data():
 
         async def async_generate():
             try:
-                # S'assurer que nous commençons avec une connexion propre
                 if device_service.is_connected:
                     await device_service.disconnect()
                     await asyncio.sleep(0.5)
@@ -182,11 +181,15 @@ def stream_treadmill_data():
                             await device_service.connect()
                             await asyncio.sleep(0.5)
 
-                        # Utiliser get_fast_status qui gère déjà la logique de mise à jour
                         status = await device_service.get_fast_status()
-                        logger.debug(f"Stream status: {status}")
+                        logger.debug(f"Raw status from device: {status}")
 
-                        # Ajouter le timestamp
+                        # Vérifier si le status est valide
+                        if all(v is None for v in status.values()):
+                            logger.warning("Invalid status received, skipping")
+                            await asyncio.sleep(0.5)
+                            continue
+
                         status['timestamp'] = datetime.now().isoformat()
 
                         yield f"data: {json.dumps(status)}\n\n"
@@ -231,6 +234,7 @@ def stream_treadmill_data():
             'Content-Type': 'text/event-stream'
         }
     )
+
 
 def async_to_sync(async_generator):
     """Convert async generator to sync generator"""

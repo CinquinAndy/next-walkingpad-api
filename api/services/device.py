@@ -64,25 +64,35 @@ class DeviceService:
 
     def _on_new_status(self, sender, record):
         """Update internal status cache with latest device values"""
-        self._last_status.update({
-            "mode": self._get_mode_string(record.manual_mode),
-            "belt_state": self._get_belt_state_string(record.belt_state),
-            "speed": record.speed / 10,
-            "distance": record.dist / 100,
-            "steps": record.steps,
-            "time": record.time
-        })
+        if record:  # Vérifier que record existe
+            self._last_status.update({
+                "mode": self._get_mode_string(record.mode),  # Changé de manual_mode à mode
+                "belt_state": self._get_belt_state_string(record.state),  # Utiliser state directement
+                "speed": record.speed / 10,
+                "distance": record.dist / 100,
+                "steps": record.steps,
+                "time": record.time
+            })
 
-        logger.debug(f"Status updated - Distance: {self._last_status['distance']}km, "
-                    f"Steps: {self._last_status['steps']}, "
-                    f"Time: {self._last_status['time']} seconds")
+            logger.debug(f"Status updated: {self._last_status}")
 
     @ensure_connection(disconnect_after=False)
     async def get_fast_status(self) -> Dict:
         """Get current device status using existing connection"""
-        await self.controller.ask_stats()
-        await asyncio.sleep(self.minimal_cmd_space)
-        return self._last_status.copy()
+        try:
+            await self.controller.ask_stats()
+            await asyncio.sleep(self.minimal_cmd_space)
+
+            # Vérifier si les données sont valides
+            if all(v is None for v in self._last_status.values()):
+                logger.warning("Invalid status received, requesting new status")
+                await self.controller.ask_stats()
+                await asyncio.sleep(self.minimal_cmd_space)
+
+            return self._last_status.copy()
+        except Exception as e:
+            logger.error(f"Error getting fast status: {e}")
+            raise
 
     @ensure_connection(disconnect_after=False)
     async def get_status(self) -> Dict:
@@ -254,6 +264,8 @@ class DeviceService:
             return "idle"
         elif state == 1:
             return "running"
+        elif state == 2:
+            return "running"  # Ajouté car votre log montre state=2
         elif state >= 7:
             return "starting"
         return "unknown"
