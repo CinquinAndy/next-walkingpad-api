@@ -4,7 +4,9 @@ Simple treadmill control endpoints for basic operations
 - Start walking
 - Stop walking
 """
-from flask import Blueprint, jsonify
+from datetime import datetime
+
+from flask import Blueprint, jsonify, Response, json
 import asyncio
 
 from api.services.device import device_service
@@ -128,3 +130,97 @@ async def stop_treadmill():
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@bp.route('/stream', methods=['GET'])
+async def stream_treadmill_data():
+    """
+    Stream real-time treadmill data with proper state management
+    Stops automatically when belt state is idle or device disconnects
+    """
+
+    def generate():
+        async def get_metrics():
+            idle_count = 0  # Counter for consecutive idle states
+            MAX_IDLE_COUNT = 3  # Number of consecutive idle states before stopping
+
+            try:
+                # Initial connection
+                await device_service.connect()
+
+                while True:
+                    try:
+                        status = await device_service.get_status()
+
+                        # Prepare metric data
+                        data = {
+                            'timestamp': datetime.now().isoformat(),
+                            'distance_km': float(status.get('distance', 0)),
+                            'steps': int(status.get('steps', 0)),
+                            'time': int(status.get('time', 0)),
+                            'speed': float(status.get('speed', 0)),
+                            'belt_state': status.get('belt_state', 'unknown')
+                        }
+
+                        # Check for idle state or stopped state
+                        if data['belt_state'] in ['idle', 'standby'] and data['speed'] == 0:
+                            idle_count += 1
+                            if idle_count >= MAX_IDLE_COUNT:
+                                logger.info("Treadmill stopped - ending stream")
+                                # Send final state before stopping
+                                yield f"data: {json.dumps(data)}\n\n"
+                                break
+                        else:
+                            idle_count = 0  # Reset counter if not idle
+
+                        yield f"data: {json.dumps(data)}\n\n"
+                        await asyncio.sleep(1.0)  # 1 second update interval
+
+                    except Exception as e:
+                        if "Unreachable" in str(e) or "disconnected" in str(e).lower():
+                            logger.warning("Device disconnected - ending stream")
+                            yield f"data: {json.dumps({'status': 'disconnected', 'error': str(e)})}\n\n"
+                            break
+                        else:
+                            logger.error(f"Error getting metrics: {e}")
+                            continue
+
+            except Exception as e:
+                logger.error(f"Stream error: {e}")
+                yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
+
+            finally:
+                try:
+                    await device_service.disconnect()
+                except Exception as e:
+                    logger.error(f"Error disconnecting: {e}")
+
+        # Create and manage event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            it = get_metrics()
+            while True:
+                try:
+                    data = loop.run_until_complete(anext(it))
+                    if data:  # Only yield if we have data
+                        yield data
+                except StopAsyncIteration:
+                    break
+                except Exception as e:
+                    logger.error(f"Iterator error: {e}")
+                    break
+        finally:
+            loop.close()
+
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream',
+            'X-Accel-Buffering': 'no'  # Disable proxy buffering
+        }
+    )

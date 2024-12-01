@@ -1,10 +1,10 @@
 """
 Enhanced exercise streaming service with better error handling and device reconnection
 """
-from datetime import datetime, timezone
-from dataclasses import dataclass
-from typing import Optional
 import asyncio
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Optional
 
 from api.models.exercise import ExerciseSession
 from api.services.database import DatabaseService
@@ -13,6 +13,7 @@ from api.utils.helpers import calculate_calories
 from api.utils.logger import get_logger
 
 logger = get_logger()
+
 
 @dataclass
 class StreamMetrics:
@@ -23,6 +24,7 @@ class StreamMetrics:
     speed: float = 0.0
     calories: Optional[int] = None
     belt_state: Optional[str] = None
+
 
 class ExerciseStreamService:
     """Service for managing exercise sessions with optimized streaming"""
@@ -241,6 +243,7 @@ class ExerciseStreamService:
         except Exception as e:
             logger.error(f"Error ending session: {e}")
             raise
+
 
 # Create singleton instance
 exercise_stream_service = ExerciseStreamService()
