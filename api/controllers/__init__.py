@@ -8,6 +8,7 @@ from . import (
     exercise,         # exercise endpoints
     settings,         # Settings and preferences
     initialization,   # Device initialization
+    device_metrics,   # Device metrics streaming
     targets          # Exercise targets and goals
 )
 from api.utils.logger import logger
@@ -31,5 +32,6 @@ def register_blueprints(app: Flask) -> None:
 
     # Exercise endpoints (both traditional and streaming)
     app.register_blueprint(exercise.bp, url_prefix='/api/exercise')
+    app.register_blueprint(device_metrics.bp, url_prefix='/api/device_metrics')
 
     logger.info("Blueprint registration complete")

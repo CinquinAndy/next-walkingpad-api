@@ -36,3 +36,5 @@ old\restserver.py
 old\Readme-spec.md
 __pycache__
 logs
+output.txt
+large.txt

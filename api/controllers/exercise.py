@@ -1,101 +1,143 @@
 """
-Exercise controller handling both real-time sessions and historical data
+Enhanced exercise controller with persistent device connection and efficient metrics streaming
 """
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app
 import json
 import asyncio
+from datetime import datetime, timezone
 
-from api.services.exercise import exercise_service  # Keep existing service for stats
-from api.services.exercise_stream import exercise_stream_service  # New streaming service
-from api.utils.logger import logger
+from api.services.exercise import exercise_service
+from api.utils.logger import get_logger
 
+logger = get_logger()
 bp = Blueprint('exercise', __name__)
 
-# New streaming endpoints
 @bp.route('/session/start', methods=['POST'])
 async def start_session_stream():
-    """Start a new exercise session with real-time streaming"""
+    """Start a new exercise session with persistent device connection"""
+    logger.info("Starting new exercise session")
     try:
-        session = await exercise_stream_service.start_session()
+        # Check if there's already an active session
+        if exercise_service.current_session:
+            logger.warning("Cannot start new session - another session is active")
+            return jsonify({
+                'status': 'error',
+                'message': 'An active session already exists'
+            }), 409
+
+        session = await exercise_service.start_session()
         return jsonify({
             'status': 'success',
             'message': 'Session started successfully',
-            'session_id': session.id
+            'data': {
+                'session_id': session.id,
+                'start_time': session.start_time.isoformat()
+            }
         })
+
     except Exception as e:
-        logger.error(f"Failed to start streaming session: {e}")
+        logger.error(f"Failed to start session: {str(e)}", exc_info=True)
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 500
 
+
 @bp.route('/session/metrics', methods=['GET'])
 async def stream_metrics():
-    """Stream current session metrics"""
-    async def generate():
-        while True:
-            metrics = await exercise_stream_service.get_current_metrics()
-            if metrics:
-                yield f"data: {json.dumps(metrics.__dict__)}\n\n"
-            await asyncio.sleep(1.0)
+    """
+    Stream real-time metrics using a synchronous generator wrapper.
+    Handles server-sent events (SSE) properly with Flask.
+    """
+    if not exercise_service.current_session:
+        return jsonify({
+            'status': 'error',
+            'message': 'No active session'
+        }), 404
+
+    def sync_generator():
+        """
+        Synchronous generator wrapper for async metrics streaming.
+        Uses an event loop per request to handle async operations.
+        """
+        loop = asyncio.new_event_loop()
+
+        async def get_metrics():
+            try:
+                while exercise_service.current_session:
+                    metrics = await exercise_service._get_device_metrics()
+                    data = {
+                        'status': 'active',
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        'metrics': {
+                            'distance_km': round(metrics['distance_km'], 3),
+                            'steps': metrics['steps'],
+                            'duration_seconds': metrics['duration_seconds'],
+                            'speed': round(metrics['speed'], 2)
+                        }
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+                    await asyncio.sleep(1.0)
+            except Exception as e:
+                logger.error(f"Error in metrics stream: {str(e)}")
+                yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
+            finally:
+                loop.stop()
+
+        async def run_metrics():
+            async for data in get_metrics():
+                yield data
+
+        # Create and run the event loop for this request
+        try:
+            while True:
+                data = loop.run_until_complete(anext(run_metrics()))
+                yield data
+        except (StopAsyncIteration, RuntimeError):
+            return
+        except Exception as e:
+            logger.error(f"Stream error: {e}")
+            return
+        finally:
+            loop.close()
 
     return Response(
-        generate(),
+        sync_generator(),
         mimetype='text/event-stream',
         headers={
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
             'Content-Type': 'text/event-stream'
         }
     )
 
-@bp.route('/session/end', methods=['POST'])
-async def end_session_stream():
-    """End current streaming session"""
-    try:
-        session = await exercise_stream_service.end_session()
-        return jsonify({
-            'status': 'success',
-            'message': 'Session ended successfully',
-            'session': session.to_dict()
-        })
-    except Exception as e:
-        logger.error(f"Failed to end streaming session: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-# Keep existing endpoints for backwards compatibility and stats
-@bp.route('/start', methods=['POST'])
-async def start_session():
-    """Legacy start session endpoint"""
+@bp.route('/session/stop', methods=['POST'])
+async def stop_session():
+    """Stop the current session while maintaining device connection"""
     try:
-        session = await exercise_service.start_session()
-        return jsonify({
-            'message': 'Session started successfully',
-            'session_id': session.id
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        if not exercise_service.current_session:
+            return jsonify({
+                'status': 'error',
+                'message': 'No active session found'
+            }), 404
 
-@bp.route('/end', methods=['POST'])
-async def end_exercise():
-    """Legacy end session endpoint"""
-    try:
         session = await exercise_service.end_session()
         return jsonify({
             'status': 'success',
-            'message': 'Exercise session ended successfully',
-            'session': session.to_dict()
+            'message': 'Session ended successfully',
+            'data': session.to_dict()
         })
+
     except Exception as e:
-        logger.error(f"Error ending session: {e}")
+        logger.error(f"Failed to stop session: {str(e)}", exc_info=True)
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 500
 
+# Legacy endpoints for backwards compatibility
 @bp.route('/history', methods=['GET'])
 async def get_history():
     """Get exercise history"""

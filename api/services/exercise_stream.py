@@ -1,11 +1,10 @@
 """
-api/services/exercise_stream.py
-Exercise streaming service optimized for real-time data collection
+Enhanced exercise streaming service with better error handling and device reconnection
 """
-import asyncio
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Optional
+import asyncio
 
 from api.models.exercise import ExerciseSession
 from api.services.database import DatabaseService
@@ -18,15 +17,17 @@ logger = get_logger()
 @dataclass
 class StreamMetrics:
     """Real-time session metrics"""
-    distance_km: float
-    steps: int
-    duration_seconds: int
-    speed: float
+    distance_km: float = 0.0
+    steps: int = 0
+    duration_seconds: int = 0
+    speed: float = 0.0
     calories: Optional[int] = None
     belt_state: Optional[str] = None
 
 class ExerciseStreamService:
     """Service for managing exercise sessions with optimized streaming"""
+    MAX_RECONNECT_ATTEMPTS = 3
+    RECONNECT_DELAY = 2.0  # seconds
 
     def __init__(self):
         """Initialize streaming service"""
@@ -34,20 +35,16 @@ class ExerciseStreamService:
         self.device = device_service
         self.current_session: Optional[ExerciseSession] = None
         self._session_active = False
-        self._metrics_update_interval = 1.0  # seconds
+        self._metrics_update_interval = 1.0
         self._last_metrics: Optional[StreamMetrics] = None
         self._stream_task: Optional[asyncio.Task] = None
 
     async def start_session(self) -> ExerciseSession:
-        """Start new exercise session with streaming"""
+        """Start new exercise session with retry logic for device connection"""
+        logger.info("Starting new exercise session")
+
         try:
-            # Connect to device first (will stay connected during session)
-            await self.device.connect()
-
-            # Set device to manual mode
-            await self.device.set_mode("manual")
-
-            # Create session in database
+            # Create session in database first
             current_time = datetime.now(timezone.utc)
             query = """
                 INSERT INTO exercise_sessions 
@@ -64,48 +61,85 @@ class ExerciseStreamService:
             self.current_session = ExerciseSession.from_db_row(result[0])
             logger.info(f"Created session: {self.current_session.id}")
 
-            # Start the walking pad
-            await self.device.start_walking()
-            self._session_active = True
+            # Attempt device connection with retries
+            for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
+                try:
+                    logger.info(f"Connecting to device (attempt {attempt + 1}/{self.MAX_RECONNECT_ATTEMPTS})")
+                    await self.device.connect()
+                    await self.device.set_mode("manual")
+                    await self.device.start_walking()
+                    self._session_active = True
+                    break
+                except Exception as e:
+                    logger.error(f"Connection attempt {attempt + 1} failed: {str(e)}")
+                    if attempt < self.MAX_RECONNECT_ATTEMPTS - 1:
+                        await asyncio.sleep(self.RECONNECT_DELAY)
+                    else:
+                        raise Exception("Failed to connect after multiple attempts")
 
             # Start metrics streaming
             self._stream_task = asyncio.create_task(self._stream_session_data())
-
             return self.current_session
 
         except Exception as e:
             self._session_active = False
-            await self.device.disconnect()
-            logger.error(f"Failed to start session: {e}")
+            logger.error(f"Failed to start session: {str(e)}")
+            # Cleanup if session was created but device connection failed
+            if self.current_session:
+                await self._cleanup_failed_session(self.current_session.id)
             raise
 
+    async def _cleanup_failed_session(self, session_id: int):
+        """Clean up a failed session from the database"""
+        try:
+            query = "DELETE FROM exercise_sessions WHERE id = %s"
+            self.db.execute_query(query, (session_id,))
+            logger.info(f"Cleaned up failed session {session_id}")
+        except Exception as e:
+            logger.error(f"Failed to cleanup session {session_id}: {str(e)}")
+
     async def _stream_session_data(self):
-        """Stream real-time data using fast status"""
+        """Stream real-time data with error handling"""
         try:
             while self._session_active:
-                # Get status using fast method
-                status = await self.device.get_fast_status()
-
-                # Update metrics
-                self._last_metrics = StreamMetrics(
-                    distance_km=status['distance'],
-                    steps=status['steps'],
-                    duration_seconds=status['time'],
-                    speed=status['speed'],
-                    belt_state=status['belt_state']
-                )
-
-                # Periodic database update
-                await self._update_session_in_db()
+                try:
+                    status = await self.device.get_fast_status()
+                    self._last_metrics = StreamMetrics(
+                        distance_km=status['distance'],
+                        steps=status['steps'],
+                        duration_seconds=status['time'],
+                        speed=status['speed'],
+                        belt_state=status['belt_state']
+                    )
+                    await self._update_session_in_db()
+                except Exception as e:
+                    logger.error(f"Error in metrics stream: {str(e)}")
+                    if "Unreachable" in str(e):
+                        await self._attempt_reconnect()
 
                 await asyncio.sleep(self._metrics_update_interval)
 
         except asyncio.CancelledError:
             logger.info("Session stream cancelled")
         except Exception as e:
-            logger.error(f"Error in session stream: {e}")
+            logger.error(f"Fatal error in session stream: {str(e)}")
             self._session_active = False
             raise
+
+    async def _attempt_reconnect(self):
+        """Attempt to reconnect to the device"""
+        for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
+            try:
+                await self.device.disconnect()
+                await asyncio.sleep(self.RECONNECT_DELAY)
+                await self.device.connect()
+                logger.info("Successfully reconnected to device")
+                return
+            except Exception as e:
+                logger.error(f"Reconnection attempt {attempt + 1} failed: {str(e)}")
+
+        self._session_active = False
+        raise Exception("Failed to reconnect to device")
 
     async def _update_session_in_db(self):
         """Update session in database"""
