@@ -135,22 +135,52 @@ async def stop_treadmill():
 @bp.route('/stream', methods=['GET'])
 async def stream_treadmill_data():
     """
-    Stream real-time treadmill data with proper state management
-    Stops automatically when belt state is idle or device disconnects
+    Stream real-time treadmill data with proper state management and reconnection handling
     """
 
     def generate():
         async def get_metrics():
-            idle_count = 0  # Counter for consecutive idle states
-            MAX_IDLE_COUNT = 3  # Number of consecutive idle states before stopping
+            idle_count = 0
+            MAX_IDLE_COUNT = 3
+            reconnect_attempts = 0
+            MAX_RECONNECT_ATTEMPTS = 3
+            RECONNECT_DELAY = 2.0
 
             try:
-                # Initial connection
-                await device_service.connect()
-
                 while True:
                     try:
+                        if not device_service.is_connected:
+                            if reconnect_attempts >= MAX_RECONNECT_ATTEMPTS:
+                                logger.error("Max reconnection attempts reached")
+                                yield f"data: {json.dumps({'status': 'error', 'error': 'Device connection lost'})}\n\n"
+                                break
+
+                            logger.info(f"Attempting to reconnect (attempt {reconnect_attempts + 1})")
+                            try:
+                                await device_service.connect()
+                                reconnect_attempts = 0  # Reset counter on successful connection
+                            except Exception as conn_err:
+                                logger.error(f"Reconnection attempt failed: {conn_err}")
+                                reconnect_attempts += 1
+                                await asyncio.sleep(RECONNECT_DELAY)
+                                continue
+
+                        # Get device status
                         status = await device_service.get_status()
+
+                        # Validate status data
+                        if not status or all(v == 0 for v in [status.get('distance', 0),
+                                                              status.get('steps', 0),
+                                                              status.get('time', 0)]):
+                            logger.warning("Received empty or invalid status")
+                            idle_count += 1
+                            if idle_count >= MAX_IDLE_COUNT:
+                                logger.info("Maximum idle readings reached - ending stream")
+                                break
+                            continue
+
+                        # Reset idle counter if we got valid data
+                        idle_count = 0
 
                         # Prepare metric data
                         data = {
@@ -159,43 +189,30 @@ async def stream_treadmill_data():
                             'steps': int(status.get('steps', 0)),
                             'time': int(status.get('time', 0)),
                             'speed': float(status.get('speed', 0)),
-                            'belt_state': status.get('belt_state', 'unknown')
+                            'belt_state': status.get('belt_state', 'unknown'),
+                            'status': 'active'
                         }
-
-                        # Check for idle state or stopped state
-                        if data['belt_state'] in ['idle', 'standby'] and data['speed'] == 0:
-                            idle_count += 1
-                            if idle_count >= MAX_IDLE_COUNT:
-                                logger.info("Treadmill stopped - ending stream")
-                                # Send final state before stopping
-                                yield f"data: {json.dumps(data)}\n\n"
-                                break
-                        else:
-                            idle_count = 0  # Reset counter if not idle
 
                         yield f"data: {json.dumps(data)}\n\n"
                         await asyncio.sleep(1.0)  # 1 second update interval
 
                     except Exception as e:
+                        logger.error(f"Error in metrics loop: {e}")
                         if "Unreachable" in str(e) or "disconnected" in str(e).lower():
-                            logger.warning("Device disconnected - ending stream")
-                            yield f"data: {json.dumps({'status': 'disconnected', 'error': str(e)})}\n\n"
-                            break
-                        else:
-                            logger.error(f"Error getting metrics: {e}")
+                            device_service.is_connected = False
                             continue
-
-            except Exception as e:
-                logger.error(f"Stream error: {e}")
-                yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
+                        yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
+                        await asyncio.sleep(1.0)
 
             finally:
-                try:
-                    await device_service.disconnect()
-                except Exception as e:
-                    logger.error(f"Error disconnecting: {e}")
+                # Ensure proper cleanup
+                if device_service.is_connected:
+                    try:
+                        await device_service.disconnect()
+                    except Exception as e:
+                        logger.error(f"Error during cleanup: {e}")
 
-        # Create and manage event loop
+        # Create event loop for the generator
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -204,15 +221,18 @@ async def stream_treadmill_data():
             while True:
                 try:
                     data = loop.run_until_complete(anext(it))
-                    if data:  # Only yield if we have data
+                    if data:
                         yield data
                 except StopAsyncIteration:
                     break
                 except Exception as e:
-                    logger.error(f"Iterator error: {e}")
+                    logger.error(f"Stream iteration error: {e}")
                     break
         finally:
-            loop.close()
+            try:
+                loop.close()
+            except Exception as e:
+                logger.error(f"Error closing loop: {e}")
 
     return Response(
         generate(),
@@ -221,6 +241,6 @@ async def stream_treadmill_data():
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
             'Content-Type': 'text/event-stream',
-            'X-Accel-Buffering': 'no'  # Disable proxy buffering
+            'X-Accel-Buffering': 'no'
         }
     )
