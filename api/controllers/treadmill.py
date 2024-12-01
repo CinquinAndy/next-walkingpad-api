@@ -10,6 +10,8 @@ from datetime import datetime
 from flask import Blueprint, jsonify, Response, json, app
 import asyncio
 
+from ph4_walkingpad.pad import WalkingPadCurStatus
+
 from api.services.device import device_service
 from api.services.security import ExerciseSecurityService
 from api.services.database import DatabaseService
@@ -164,96 +166,51 @@ async def stream_treadmill_data():
     logger.info("Stream endpoint called")
 
     async def generate():
-        """
-        Async generator that yields treadmill metrics data.
-        """
         logger.info("Generate function started")
 
-        # Constants
         IDLE_MAX_COUNT = 3
-        RECONNECT_MAX_ATTEMPTS = 3
-        RECONNECT_DELAY = 2.0
-
         idle_count = 0
-        reconnect_attempts = 0
-        last_connection_attempt = 0
-
-        async def ensure_connection():
-            nonlocal reconnect_attempts, last_connection_attempt
-            current_time = time.time()
-
-            if not device_service.is_connected:
-                if current_time - last_connection_attempt < RECONNECT_DELAY:
-                    await asyncio.sleep(RECONNECT_DELAY)
-                    return False
-
-                if reconnect_attempts >= RECONNECT_MAX_ATTEMPTS:
-                    logger.error("Maximum reconnection attempts reached")
-                    return False
-
-                logger.info(f"Attempting to reconnect (attempt {reconnect_attempts + 1})")
-                try:
-                    await device_service.connect()
-                    reconnect_attempts = 0
-                    last_connection_attempt = current_time
-                    return True
-                except Exception as conn_err:
-                    logger.error(f"Reconnection attempt failed: {conn_err}")
-                    reconnect_attempts += 1
-                    last_connection_attempt = current_time
-                    return False
-            return True
 
         try:
             while True:
                 try:
-                    # Ensure connection is active
-                    if not await ensure_connection():
-                        yield f"data: {json.dumps({'status': 'error', 'error': 'Connection failed'})}\n\n"
-                        await asyncio.sleep(RECONNECT_DELAY)
-                        continue
+                    if not device_service.is_connected:
+                        logger.info("Connecting to device...")
+                        await device_service.connect()
+                        await asyncio.sleep(1)
 
                     # Get current treadmill status
                     status = await device_service.get_status()
+                    logger.debug(f"Raw status received: {status}")
 
                     if status is None:
                         logger.warning("Received null status")
-                        idle_count += 1
-                        if idle_count >= IDLE_MAX_COUNT:
-                            break
                         continue
 
-                    logger.debug(f"Status type: {type(status)}, Status content: {status}")
-
-                    # Convert status to dictionary based on its type
-                    if isinstance(status, dict):
+                    # Accéder aux données brutes du contrôleur
+                    raw_status = device_service.controller.last_status
+                    if raw_status and isinstance(raw_status, WalkingPadCurStatus):
                         status_dict = {
-                            'distance': float(status.get('dist', 0)),
-                            'time': int(status.get('time', 0)),
-                            'steps': int(status.get('steps', 0)),
-                            'speed': float(status.get('speed', 0)),
-                            'state': status.get('state', 0),
-                            'mode': status.get('mode', 0),
-                            'app_speed': float(status.get('app_speed', 0)),
-                            'button': status.get('button', 0)
+                            'distance': float(raw_status.dist) / 100,  # Conversion en km
+                            'time': int(raw_status.time),
+                            'steps': int(raw_status.steps),
+                            'speed': float(raw_status.speed) / 10,  # Conversion en km/h
+                            'state': raw_status.belt_state,
+                            'mode': raw_status.manual_mode,
+                            'app_speed': float(raw_status.app_speed) / 30 if raw_status.app_speed > 0 else 0,
+                            'button': raw_status.controller_button
                         }
                     else:
-                        status_dict = {
-                            'distance': float(status.dist),
-                            'time': int(status.time),
-                            'steps': int(status.steps),
-                            'speed': float(status.speed),
-                            'state': status.state,
-                            'mode': status.mode,
-                            'app_speed': float(status.app_speed),
-                            'button': status.button
-                        }
+                        # Utiliser le dictionnaire retourné par get_status si pas de données brutes
+                        status_dict = status
 
+                    # Vérifier si le tapis est arrêté
                     is_stopped = status_dict['speed'] == 0 and status_dict['state'] in [0, 1]
 
                     if is_stopped:
                         idle_count += 1
                         if idle_count >= IDLE_MAX_COUNT:
+                            logger.info("Belt stopped - ending stream")
                             yield f"data: {json.dumps({'status': 'stopped', 'metrics': status_dict})}\n\n"
                             break
                     else:
@@ -270,14 +227,13 @@ async def stream_treadmill_data():
                     logger.debug(f"Sending metrics: {data}")
                     yield f"data: {json.dumps(data)}\n\n"
 
-                    # Petit délai pour éviter de surcharger la connexion
                     await asyncio.sleep(0.5)
 
                 except Exception as e:
                     logger.error(f"Error in metrics loop: {e}")
                     logger.exception("Detailed error trace:")
 
-                    if "Unreachable" in str(e) or "disconnected" in str(e).lower():
+                    if any(x in str(e).lower() for x in ["unreachable", "disconnected"]):
                         device_service.is_connected = False
                         continue
 
