@@ -174,10 +174,44 @@ async def reset_device_state(device_service, logger):
     await safe_disconnect(device_service, logger)
     await asyncio.sleep(1)  # Attente pour s'assurer que tout est bien réinitialisé
 
+
 @bp.route('/stream', methods=['GET'])
 def stream_treadmill_data():
     """Stream real-time treadmill data"""
     logger.info("Stream endpoint called")
+
+    async def is_idle_status(status):
+        """Check if the treadmill is in idle state"""
+        return (
+                getattr(status, 'speed', 0) == 0 and
+                getattr(status, 'dist', 0) == 0 and
+                getattr(status, 'steps', 0) == 0 and
+                getattr(status, 'time', 0) == 0 and
+                getattr(status, 'state', 0) == 0
+        )
+
+    async def handle_idle_disconnect(device_service, logger):
+        """Handle disconnection when idle state is detected"""
+        logger.info("Idle state detected, initiating disconnect sequence")
+        await reset_device_state(device_service, logger)
+        return {
+            'mode': None,
+            'belt_state': None,
+            'speed': 0.0,
+            'distance': 0.0,
+            'steps': 0,
+            'time': 0,
+            'app_speed': 1.0,
+            'button': 0,
+            'timestamp': datetime.now().isoformat(),
+            'raw_status': "Idle state - Disconnected",
+            'time_formatted': "0:00:00",
+            'distance_formatted': "0.00 km",
+            'speed_formatted': "0.0 km/h",
+            'belt_state_text': "Stopped",
+            'mode_text': "Standby",
+            'connection_state': "disconnected_idle"
+        }
 
     def generate():
         loop = None
@@ -187,8 +221,10 @@ def stream_treadmill_data():
             logger.info("Generate function started")
 
             async def async_generate():
+                idle_count = 0  # Compteur pour confirmer l'état idle
+                MAX_IDLE_COUNT = 3  # Nombre de vérifications consécutives
+
                 try:
-                    # Réinitialisation initiale
                     await reset_device_state(device_service, logger)
 
                     while True:
@@ -204,6 +240,19 @@ def stream_treadmill_data():
                             logger.debug(f"Current status: {cur_status}")
 
                             if cur_status:
+                                # Vérifier si le status est idle
+                                if await is_idle_status(cur_status):
+                                    idle_count += 1
+                                    logger.debug(f"Idle state detected ({idle_count}/{MAX_IDLE_COUNT})")
+
+                                    if idle_count >= MAX_IDLE_COUNT:
+                                        # Si on a assez de confirmations d'état idle
+                                        idle_status = await handle_idle_disconnect(device_service, logger)
+                                        yield f"data: {json.dumps(idle_status)}\n\n"
+                                        return  # Termine le générateur
+                                else:
+                                    idle_count = 0  # Réinitialise le compteur si pas idle
+
                                 status_dict = {
                                     'mode': int(cur_status.mode) if hasattr(cur_status, 'mode') else None,
                                     'belt_state': int(cur_status.state) if hasattr(cur_status, 'state') else None,
@@ -214,7 +263,8 @@ def stream_treadmill_data():
                                     'app_speed': float(cur_status.app_speed) if hasattr(cur_status, 'app_speed') else 0,
                                     'button': int(cur_status.button) if hasattr(cur_status, 'button') else 0,
                                     'timestamp': datetime.now().isoformat(),
-                                    'raw_status': str(cur_status)
+                                    'raw_status': str(cur_status),
+                                    'connection_state': 'connected'
                                 }
 
                                 status_dict.update({
@@ -239,20 +289,30 @@ def stream_treadmill_data():
                                 yield f"data: {json.dumps(status_dict)}\n\n"
                             else:
                                 logger.warning("No status available")
-                                yield f"data: {json.dumps({'error': 'No status available'})}\n\n"
+                                yield f"data: {json.dumps({
+                                    'error': 'No status available',
+                                    'connection_state': 'error'
+                                })}\n\n"
 
                             await asyncio.sleep(0.5)
 
                         except Exception as e:
                             logger.error(f"Error during stream: {e}", exc_info=True)
-                            # Tentative de réinitialisation en cas d'erreur
                             await reset_device_state(device_service, logger)
-                            yield f"data: {json.dumps({'error': str(e), 'status': 'reconnecting'})}\n\n"
-                            await asyncio.sleep(2)  # Délai plus long avant nouvelle tentative
+                            yield f"data: {json.dumps({
+                                'error': str(e),
+                                'status': 'reconnecting',
+                                'connection_state': 'reconnecting'
+                            })}\n\n"
+                            await asyncio.sleep(2)
 
                 except Exception as e:
                     logger.error(f"Fatal error in stream: {e}", exc_info=True)
-                    yield f"data: {json.dumps({'error': 'Stream terminated', 'details': str(e)})}\n\n"
+                    yield f"data: {json.dumps({
+                        'error': 'Stream terminated',
+                        'details': str(e),
+                        'connection_state': 'terminated'
+                    })}\n\n"
 
                 finally:
                     await safe_disconnect(device_service, logger)
@@ -270,7 +330,11 @@ def stream_treadmill_data():
 
         except Exception as e:
             logger.error(f"Fatal generator error: {e}", exc_info=True)
-            yield f"data: {json.dumps({'error': 'Generator failed', 'details': str(e)})}\n\n"
+            yield f"data: {json.dumps({
+                'error': 'Generator failed',
+                'details': str(e),
+                'connection_state': 'failed'
+            })}\n\n"
 
         finally:
             try:
