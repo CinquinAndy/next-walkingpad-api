@@ -157,100 +157,92 @@ async def start_treadmill():
 
 
 @bp.route('/stream', methods=['GET'])
-async def stream_treadmill_data():
+def stream_treadmill_data():
     """Stream real-time treadmill data"""
     logger.info("Stream endpoint called")
 
-    async def generate():
+    def generate():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         logger.info("Generate function started")
-        IDLE_MAX_COUNT = 3
-        idle_count = 0
 
-        try:
-            # S'assurer d'une nouvelle connexion pour le streaming
-            if device_service.is_connected:
-                await device_service.disconnect()
-                await asyncio.sleep(1)
-
-            await device_service.connect()
-            await asyncio.sleep(device_service.minimal_cmd_space)
-
-            while True:
-                try:
-                    # Récupérer les données
-                    await device_service.controller.ask_stats()
-                    await asyncio.sleep(device_service.minimal_cmd_space)
-
-                    raw_status = device_service.controller.last_status
-
-                    if isinstance(raw_status, WalkingPadCurStatus):
-                        status_dict = {
-                            'distance': float(raw_status.dist) / 100,
-                            'time': int(raw_status.time),
-                            'steps': int(raw_status.steps),
-                            'speed': float(raw_status.speed) / 10,
-                            'state': raw_status.belt_state,
-                            'mode': raw_status.manual_mode,
-                            'app_speed': float(raw_status.app_speed) / 30 if raw_status.app_speed > 0 else 0,
-                            'button': raw_status.controller_button
-                        }
-                    else:
-                        status_dict = {
-                            'distance': 0,
-                            'time': 0,
-                            'steps': 0,
-                            'speed': 0,
-                            'state': 0,
-                            'mode': 1
-                        }
-
-                    is_stopped = status_dict['speed'] == 0 and status_dict['state'] in [0, 1]
-
-                    if is_stopped:
-                        idle_count += 1
-                        if idle_count >= IDLE_MAX_COUNT:
-                            yield f"data: {json.dumps({'status': 'stopped', 'metrics': status_dict})}\n\n"
-                            break
-                    else:
-                        idle_count = 0
-
-                    data = {
-                        'status': 'active',
-                        'metrics': {
-                            'timestamp': datetime.now().isoformat(),
-                            **status_dict
-                        }
-                    }
-
-                    yield f"data: {json.dumps(data)}\n\n"
-                    await asyncio.sleep(0.5)
-
-                except Exception as e:
-                    logger.error(f"Error in metrics loop: {e}")
-                    if "Unreachable" in str(e):
-                        # Tentative de reconnexion
-                        await device_service.disconnect()
-                        await asyncio.sleep(1)
-                        await device_service.connect()
-                        continue
-
-                    yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
-                    await asyncio.sleep(1.0)
-
-        finally:
+        async def async_generate():
             try:
-                await device_service.disconnect()
+                # Connexion initiale
+                if not device_service.is_connected:
+                    await device_service.connect()
+                    await asyncio.sleep(1)
+
+                while True:
+                    try:
+                        # Vérifier la connexion
+                        if not device_service.is_connected:
+                            await device_service.connect()
+                            await asyncio.sleep(1)
+
+                        # Demander les stats
+                        await device_service.controller.ask_stats()
+                        await asyncio.sleep(0.5)
+
+                        status = device_service.controller.last_status
+
+                        if not status:
+                            continue
+
+                        # Convertir le status en dictionnaire
+                        status_dict = {
+                            'distance': float(status.dist) / 100,
+                            'time': int(status.time),
+                            'steps': int(status.steps),
+                            'speed': float(status.speed) / 10,
+                            'state': status.belt_state,  # Changé de status.state à status.belt_state
+                            'mode': status.manual_mode,  # Changé de status.mode à status.manual_mode
+                            'app_speed': float(status.app_speed) / 30 if status.app_speed > 0 else 0,
+                            'button': status.controller_button,
+                            'timestamp': datetime.now().isoformat()
+                        }
+
+                        yield f"data: {json.dumps(status_dict)}\n\n"
+                        await asyncio.sleep(0.5)
+
+                    except Exception as e:
+                        logger.error(f"Error during stream: {e}")
+                        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                        await asyncio.sleep(1)
+
             except Exception as e:
-                logger.error(f"Error during cleanup: {e}")
+                logger.error(f"Fatal error in stream: {e}")
+                yield f"data: {json.dumps({'error': 'Stream terminated'})}\n\n"
+
+            finally:
+                try:
+                    if device_service.is_connected:
+                        await device_service.disconnect()
+                except Exception as e:
+                    logger.error(f"Error during disconnect: {e}")
+
+        # Exécuter le générateur asynchrone
+        async_gen = async_generate()
+        while True:
+            try:
+                data = loop.run_until_complete(async_gen.__anext__())
+                yield data
+            except StopAsyncIteration:
+                break
+            except Exception as e:
+                logger.error(f"Stream error: {e}")
+                break
+
+        if not loop.is_closed():
+            loop.close()
 
     return Response(
-        async_to_sync(generate()),
+        generate(),
         mimetype='text/event-stream',
         headers={
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'Content-Type': 'text/event-stream',
-            'X-Accel-Buffering': 'no'
+            'Content-Type': 'text/event-stream'
         }
     )
 
