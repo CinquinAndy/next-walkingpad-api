@@ -190,7 +190,7 @@ def validate_session_data(data: Dict[str, Any]) -> tuple[bool, Optional[str], Op
         'end_time': str,
         'distance_km': (int, float),
         'steps': int,
-        'duration_seconds': int
+        'duration': int
     }
 
     # Check required fields and types
@@ -216,7 +216,7 @@ def validate_session_data(data: Dict[str, Any]) -> tuple[bool, Optional[str], Op
     validations = [
         (data['distance_km'] >= 0, "distance_km must be non-negative"),
         (data['steps'] >= 0, "steps must be non-negative"),
-        (data['duration_seconds'] >= 0, "duration_seconds must be non-negative"),
+        (data['duration'] >= 0, "duration must be non-negative"),
         (data.get('average_speed', 0) >= 0, "average_speed must be non-negative"),
         (data.get('max_speed', 0) >= 0, "max_speed must be non-negative")
     ]
@@ -231,7 +231,7 @@ def validate_session_data(data: Dict[str, Any]) -> tuple[bool, Optional[str], Op
         'end_time': end_time,
         'distance_km': float(data['distance_km']),
         'steps': int(data['steps']),
-        'duration_seconds': int(data['duration_seconds']),
+        'duration_seconds': int(data['duration']*60),
         'calories': int(data.get('calories', 0)),
         'average_speed': float(data.get('average_speed', 0)),
         'max_speed': float(data.get('max_speed', 0)),

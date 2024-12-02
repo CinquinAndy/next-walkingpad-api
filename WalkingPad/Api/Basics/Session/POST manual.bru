@@ -1,0 +1,27 @@
+meta {
+  name: POST manual
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:5678/api/sessions/sessions/manual
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "start_time": "2024-11-12T10:30:00Z",
+    "end_time": "2024-11-12T20:00:00Z",
+    "distance_km": 10.66,
+    "steps": 26881,
+    "duration": 321,
+    "calories": 0,
+    "average_speed": 2.5,
+    "max_speed": 2.5,
+    "mode": "manual",
+    "notes": "Session d'entraînement ajoutée manuellement",
+    "user_id": 1
+  }
+}
